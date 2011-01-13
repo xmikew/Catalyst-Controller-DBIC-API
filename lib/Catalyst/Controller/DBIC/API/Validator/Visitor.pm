@@ -5,6 +5,13 @@ use namespace::autoclean;
 
 BEGIN { extends 'Data::DPath::Validator::Visitor'; }
 
+=attribute_private DEBUG
+
+Debugging warnings can be enabled by setting the environment variable
+DATA_DPATH_VALIDATOR_DEBUG to a true value.
+
+=cut
+
 use constant DEBUG => $ENV{DATA_DPATH_VALIDATOR_DEBUG} || 0;
 
 around visit_array => sub
@@ -33,7 +40,9 @@ around visit_array => sub
 
 sub visit_array_entry
 {
-    my ($self, $elem, $index, $array) = @_;
+    # to make release-unused-vars.t happy
+    #my ($self, $elem, $index, $array) = @_;
+    my ($self, $elem) = @_;
     $self->dive();
     warn 'ARRAYENTRY: '. $self->current_template if DEBUG;
     if(!ref($elem))
