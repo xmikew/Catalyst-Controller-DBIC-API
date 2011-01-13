@@ -6,6 +6,7 @@ use Catalyst::Controller::DBIC::API::Types(':all');
 use MooseX::Types::Moose(':all');
 use Scalar::Util('reftype');
 use Data::Dumper;
+use Catalyst::Controller::DBIC::API::Validator;
 use namespace::autoclean;
 
 use Catalyst::Controller::DBIC::API::JoinBuilder;
@@ -16,23 +17,11 @@ A Catalyst::Controller::DBIC::API::Validator instance used solely to validate se
 
 =cut
 
-with 'MooseX::Role::BuildInstanceOf' =>
-{
-    'target' => 'Catalyst::Controller::DBIC::API::Validator',
-    'prefix' => 'search_validator',
-};
-
 =attribute_private select_validator
 
 A Catalyst::Controller::DBIC::API::Validator instance used solely to validate select parameters
 
 =cut
-
-with 'MooseX::Role::BuildInstanceOf' =>
-{
-    'target' => 'Catalyst::Controller::DBIC::API::Validator',
-    'prefix' => 'select_validator',
-};
 
 =attribute_private prefetch_validator
 
@@ -40,11 +29,16 @@ A Catalyst::Controller::DBIC::API::Validator instance used solely to validate pr
 
 =cut
 
-with 'MooseX::Role::BuildInstanceOf' =>
-{
-    'target' => 'Catalyst::Controller::DBIC::API::Validator',
-    'prefix' => 'prefetch_validator',
-};
+has [qw( search_validator select_validator prefetch_validator )] => (
+    is => 'ro',
+    isa => 'Catalyst::Controller::DBIC::API::Validator',
+    lazy => 1,
+    builder => '_build_validator',
+);
+
+sub _build_validator {
+    return Catalyst::Controller::DBIC::API::Validator->new;
+}
 
 parameter static => ( isa => Bool, default => 0 );
 
