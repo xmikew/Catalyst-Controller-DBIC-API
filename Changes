@@ -2,6 +2,9 @@ Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
 
 {{ $NEXT }}
 
+- Renamed Visitor to Validator::Visitor to conform with Data::DPath::Validator
+  and moved it into a separate file.
+
 2.002003  2010-09-16 10:44:40 Europe/Vienna
 
 - Added REST and RPC delete_bulk tests
