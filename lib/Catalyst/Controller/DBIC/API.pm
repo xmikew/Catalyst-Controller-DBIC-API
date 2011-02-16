@@ -6,7 +6,7 @@ BEGIN { extends 'Catalyst::Controller::ActionRole'; }
 
 use CGI::Expand ();
 use DBIx::Class::ResultClass::HashRefInflator;
-use JSON;
+use JSON ();
 use Test::Deep::NoTest('eq_deeply');
 use MooseX::Types::Moose(':all');
 use Moose::Util;
