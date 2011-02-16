@@ -2,6 +2,8 @@ Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
 
 {{ $NEXT }}
 
+2.003001  2011-02-16 17:52:37 Europe/Vienna
+
 - Use JSON instead of JSON::Any to get rid of the CPAN Testers failures
   when only JSON::Syck is available
 
