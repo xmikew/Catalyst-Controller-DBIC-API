@@ -2,6 +2,9 @@ Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
 
 {{ $NEXT }}
 
+- Use JSON instead of JSON::Any to get rid of the CPAN Testers failures
+  when only JSON::Syck is available
+
 2.002004  2011-01-13 19:22:20 Europe/Vienna
 
 - Renamed Visitor to Validator::Visitor to conform with Data::DPath::Validator

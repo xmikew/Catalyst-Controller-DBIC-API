@@ -157,7 +157,7 @@ has 'total_entries_arg' => ( is => 'ro', isa => Str, default => 'totalcount' );
 
 =attribute_public use_json_boolean is: ro, isa: Bool, default: 0
 
-use_json_boolean controls whether JSON::Any boolean types are used in the success parameter of the response or if raw strings are used
+use_json_boolean controls whether JSON boolean types are used in the success parameter of the response or if raw strings are used
 
 =cut
 

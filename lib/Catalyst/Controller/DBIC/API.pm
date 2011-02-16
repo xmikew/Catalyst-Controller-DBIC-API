@@ -6,7 +6,7 @@ BEGIN { extends 'Catalyst::Controller::ActionRole'; }
 
 use CGI::Expand ();
 use DBIx::Class::ResultClass::HashRefInflator;
-use JSON::Any;
+use JSON;
 use Test::Deep::NoTest('eq_deeply');
 use MooseX::Types::Moose(':all');
 use Moose::Util;
@@ -14,6 +14,17 @@ use Scalar::Util('blessed', 'reftype');
 use Try::Tiny;
 use Catalyst::Controller::DBIC::API::Request;
 use namespace::autoclean;
+
+has '_json' => (
+    is => 'ro',
+    isa => 'JSON',
+    lazy_build => 1,
+);
+
+sub _build__json {
+    # no ->utf8 here because the request params get decoded by Catalyst
+    return JSON->new;
+}
 
 with 'Catalyst::Controller::DBIC::API::StoredResultSource',
      'Catalyst::Controller::DBIC::API::StaticArguments',
@@ -106,7 +117,7 @@ sub setup :Chained('specify.in.subclass.config') :CaptureArgs(0) :PathPart('spec
 
  :Chained('setup') :CaptureArgs(0) :PathPart('') :ActionClass('Deserialize')
 
-deserialize absorbs the request data and transforms it into useful bits by using CGI::Expand->expand_hash and a smattering of JSON::Any->from_json for a handful of arguments. Current only the following arguments are capable of being expressed as JSON:
+deserialize absorbs the request data and transforms it into useful bits by using CGI::Expand->expand_hash and a smattering of JSON->decode for a handful of arguments. Current only the following arguments are capable of being expressed as JSON:
 
     search_arg
     count_arg
@@ -142,9 +153,12 @@ sub deserialize :Chained('setup') :CaptureArgs(0) :PathPart('') :ActionClass('De
             {
                 for my $key ( keys %{$req_params->{$param}} )
                 {
+                    # copy the value because JSON::XS will alter it
+                    # even if decoding failed
+                    my $value = $req_params->{$param}->{$key};
                     try
                     {
-                        my $deserialized = JSON::Any->from_json($req_params->{$param}->{$key});
+                        my $deserialized = $self->_json->decode($value);
                         $req_params->{$param}->{$key} = $deserialized;
                     }
                     catch
@@ -158,7 +172,8 @@ sub deserialize :Chained('setup') :CaptureArgs(0) :PathPart('') :ActionClass('De
             {
                 try
                 {
-                    my $deserialized = JSON::Any->from_json($req_params->{$param});
+                    my $value = $req_params->{$param};
+                    my $deserialized = $self->_json->decode($value);
                     $req_params->{$param} = $deserialized;
                 }
                 catch
@@ -639,7 +654,7 @@ sub validate_object
             }
 
             # check for multiple values
-            if (ref($value) && !(reftype($value) eq reftype(JSON::Any::true)))
+            if (ref($value) && !(reftype($value) eq reftype(JSON::true)))
             {
                 require Data::Dumper;
                 die "Multiple values for '${key}': ${\Data::Dumper::Dumper($value)}";
@@ -734,7 +749,7 @@ sub update_object_from_params
     foreach my $key (keys %$params)
     {
         my $value = $params->{$key};
-        if (ref($value) && !(reftype($value) eq reftype(JSON::Any::true)))
+        if (ref($value) && !(reftype($value) eq reftype(JSON::true)))
         {
             $self->update_object_relation($c, $object, delete $params->{$key}, $key);
         }
@@ -766,7 +781,7 @@ sub update_object_relation
     if ($row) {
         foreach my $key (keys %$related_params) {
             my $value = $related_params->{$key};
-            if (ref($value) && !(reftype($value) eq reftype(JSON::Any::true)))
+            if (ref($value) && !(reftype($value) eq reftype(JSON::true)))
             {
                 $self->update_object_relation($c, $row, delete $related_params->{$key}, $key);
             }
@@ -800,7 +815,7 @@ sub insert_object_from_params
 
     my %rels;
     while (my ($k, $v) = each %{ $params }) {
-        if (ref($v) && !(reftype($v) eq reftype(JSON::Any::true))) {
+        if (ref($v) && !(reftype($v) eq reftype(JSON::true))) {
             $rels{$k} = $v;
         }
         else {
@@ -858,13 +873,13 @@ sub end :Private
     # Check for errors caught elsewhere
     if ( $c->res->status and $c->res->status != 200 ) {
         $default_status = $c->res->status;
-        $c->stash->{$self->stash_key}->{success} = $self->use_json_boolean ? JSON::Any::false : 'false';
+        $c->stash->{$self->stash_key}->{success} = $self->use_json_boolean ? JSON::false : 'false';
     } elsif ($self->get_errors($c)) {
         $c->stash->{$self->stash_key}->{messages} = $self->get_errors($c);
-        $c->stash->{$self->stash_key}->{success} = $self->use_json_boolean ? JSON::Any::false : 'false';
+        $c->stash->{$self->stash_key}->{success} = $self->use_json_boolean ? JSON::false : 'false';
         $default_status = 400;
     } else {
-        $c->stash->{$self->stash_key}->{success} = $self->use_json_boolean ? JSON::Any::true : 'true';
+        $c->stash->{$self->stash_key}->{success} = $self->use_json_boolean ? JSON::true : 'true';
         $default_status = 200;
     }
 
@@ -996,7 +1011,7 @@ By default, the response data is serialized into $c->stash->{$self->stash_key}->
 
 =head3 use_json_boolean
 
-By default, the response success status is set to a string value of "true" or "false". If this attribute is true, JSON::Any's true() and false() will be used instead. Note, this does not effect other internal processing of boolean values.
+By default, the response success status is set to a string value of "true" or "false". If this attribute is true, JSON's true() and false() will be used instead. Note, this does not effect other internal processing of boolean values.
 
 =head3 count_arg, page_arg, select_arg, search_arg, grouped_by_arg, ordered_by_arg, prefetch_arg, as_arg, total_entries_arg
 
@@ -1126,7 +1141,7 @@ If more extensive customization is required, it is recommened to peer into the r
 
 It should be noted that version 1.004 and above makes a rapid depature from the status quo. The internals were revamped to use more modern tools such as Moose and its role system to refactor functionality out into self-contained roles.
 
-To this end, internally, this module now understands JSON boolean values (as represented by JSON::Any) and will Do The Right Thing in handling those values. This means you can have ColumnInflators installed that can covert between JSON::Any booleans and whatever your database wants for boolean values.
+To this end, internally, this module now understands JSON boolean values (as represented by the JSON module) and will Do The Right Thing in handling those values. This means you can have ColumnInflators installed that can covert between JSON booleans and whatever your database wants for boolean values.
 
 Validation for various *_allows or *_exposes is now accomplished via Data::DPath::Validator with a lightly simplified, via subclass, Data::DPath::Validator::Visitor. The rough jist of the process goes as follows: Arguments provided to those attributes are fed into the Validator and Data::DPaths are generated. Then, incoming requests are validated against these paths generated. The validator is set in "loose" mode meaning only one path is required to match. For more information, please see L<Data::DPath::Validator> and more specifically L<Catalyst::Controller::DBIC::API::Validator>.
 
