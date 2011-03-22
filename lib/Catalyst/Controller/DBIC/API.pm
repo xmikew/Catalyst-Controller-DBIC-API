@@ -932,6 +932,8 @@ push_error stores an error message into the stash to be later retrieved by L</en
 sub push_error
 {
     my ( $self, $c, $params ) = @_;
+    die 'Catalyst app object missing'
+        unless defined $c;
     my $error = 'unknown error';
     if (exists $params->{message}) {
         $error = $params->{message};
@@ -951,6 +953,8 @@ get_errors returns all of the errors stored in the stash
 sub get_errors
 {
     my ( $self, $c ) = @_;
+    die 'Catalyst app object missing'
+        unless defined $c;
     return $c->stash->{_dbic_crud_errors};
 }
 
