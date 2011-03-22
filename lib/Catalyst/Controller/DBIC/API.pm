@@ -867,34 +867,32 @@ sub end :Private
 {
     my ($self, $c) = @_;
 
-    # check for errors
-    my $default_status;
-
-    # Check for errors caught elsewhere
-    if ( $c->res->status and $c->res->status != 200 ) {
-        $default_status = $c->res->status;
-        $c->stash->{$self->stash_key}->{success} = $self->use_json_boolean ? JSON::false : 'false';
-    } elsif ($self->get_errors($c)) {
-        $c->stash->{$self->stash_key}->{messages} = $self->get_errors($c);
-        $c->stash->{$self->stash_key}->{success} = $self->use_json_boolean ? JSON::false : 'false';
-        $default_status = 400;
-    } else {
-        $c->stash->{$self->stash_key}->{success} = $self->use_json_boolean ? JSON::true : 'true';
-        $default_status = 200;
+    # don't change the http status code if already set elsewhere
+    unless ($c->res->status && $c->res->status != 200) {
+        if ($self->has_errors($c)) {
+            $c->res->status(400);
+        }
+        else {
+            $c->res->status(200);
+        }
     }
 
-    unless ($default_status == 200)
-    {
+    if ($c->res->status == 200) {
+        $c->stash->{$self->stash_key}->{success} = $self->use_json_boolean ? JSON::true : 'true';
+        if($self->return_object && $c->req->has_objects) {
+            my $returned_objects = [];
+            push(@$returned_objects, $self->each_object_inflate($c, $_)) for map { $_->[0] } $c->req->all_objects;
+            $c->stash->{$self->stash_key}->{$self->data_root} = scalar(@$returned_objects) > 1 ? $returned_objects : $returned_objects->[0];
+        }
+    }
+    else {
+        $c->stash->{$self->stash_key}->{success} = $self->use_json_boolean ? JSON::false : 'false';
+        $c->stash->{$self->stash_key}->{messages} = $self->get_errors($c)
+            if $self->has_errors($c);
+        # don't return data for error responses
         delete $c->stash->{$self->stash_key}->{$self->data_root};
     }
-    elsif($self->return_object && $c->req->has_objects)
-    {
-        my $returned_objects = [];
-        push(@$returned_objects, $self->each_object_inflate($c, $_)) for map { $_->[0] } $c->req->all_objects;
-        $c->stash->{$self->stash_key}->{$self->data_root} = scalar(@$returned_objects) > 1 ? $returned_objects : $returned_objects->[0];
-    }
 
-    $c->res->status( $default_status || 200 );
     $c->forward('serialize');
 }
 
