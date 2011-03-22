@@ -954,6 +954,19 @@ sub get_errors
     return $c->stash->{_dbic_crud_errors};
 }
 
+=method_protected has_errors
+
+returns returns true if errors are stored in the stash
+
+=cut
+
+sub has_errors {
+    my ( $self, $c ) = @_;
+    die 'Catalyst app object missing'
+        unless defined $c;
+    return exists $c->stash->{_dbic_crud_errors};
+}
+
 =head1 DESCRIPTION
 
 Easily provide common API endpoints based on your L<DBIx::Class> schema classes. Module provides both RPC and REST interfaces to base functionality. Uses L<Catalyst::Action::Serialize> and L<Catalyst::Action::Deserialize> to serialise response and/or deserialise request.
