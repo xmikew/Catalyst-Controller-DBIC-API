@@ -41,7 +41,7 @@ __PACKAGE__->config();
   __PACKAGE__->config
     ( action => { setup => { PathPart => 'artist', Chained => '/api/rpc/rpc_base' } }, # define parent chain action and partpath
       class            => 'MyAppDB::Artist',
-      result_class     => 'MyAppDB::ResultSet::Artist',
+      resultset_class  => 'MyAppDB::ResultSet::Artist',
       create_requires  => ['name', 'age'],
       create_allows    => ['nickname'],
       update_allows    => ['name', 'age', 'nickname'],
