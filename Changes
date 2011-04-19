@@ -3,6 +3,7 @@ Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
 {{ $NEXT }}
 
 - Added has_errors method
+- Fixed tests to succeed with newer DBIx::Class versions
 
 2.003001  2011-02-16 17:52:37 Europe/Vienna
 
