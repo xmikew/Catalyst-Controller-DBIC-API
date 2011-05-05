@@ -27,8 +27,9 @@ sub _build__json {
 }
 
 with 'Catalyst::Controller::DBIC::API::StoredResultSource',
-     'Catalyst::Controller::DBIC::API::StaticArguments',
-     'Catalyst::Controller::DBIC::API::RequestArguments' => { static => 1 };
+     'Catalyst::Controller::DBIC::API::StaticArguments';
+
+with 'Catalyst::Controller::DBIC::API::RequestArguments' => { static => 1 };
 
 __PACKAGE__->config();
 

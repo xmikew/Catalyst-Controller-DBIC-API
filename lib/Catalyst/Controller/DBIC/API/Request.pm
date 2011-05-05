@@ -34,11 +34,12 @@ has '_controller' =>
 
         $self->_set_class($new->class) if defined($new->class);
         $self->_set_application($new->_application);
-        $self->_set_prefetch_allows($new->prefetch_allows);
         $self->_set_search_exposes($new->search_exposes);
         $self->_set_select_exposes($new->select_exposes);
-    }
+    },
+    handles => ['prefetch_validator'],
 );
+
 
 with 'Catalyst::Controller::DBIC::API::StoredResultSource',
      'Catalyst::Controller::DBIC::API::RequestArguments',
