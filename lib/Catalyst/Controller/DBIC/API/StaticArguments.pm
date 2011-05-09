@@ -46,8 +46,8 @@ foreach my $var (qw/create_requires create_allows update_requires update_allows/
         }
     );
 
-    before "set_${var}_column" => sub { $_[0]->check_column_relation($_[2], 1) }; #"
-    before "insert_${var}_column" => sub { $_[0]->check_column_relation($_[2], 1) }; #"
+    before "set_${var}_column" => sub { $_[0]->check_column_relation($_[2], 1) };
+    before "insert_${var}_column" => sub { $_[0]->check_column_relation($_[2], 1) };
 }
 
 =attribute_public prefetch_allows is: ro, isa: ArrayRef[ArrayRef|Str|HashRef]
