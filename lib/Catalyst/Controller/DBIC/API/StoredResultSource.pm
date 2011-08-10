@@ -25,40 +25,26 @@ result_class is the name of the resultset class that is the model for this contr
 
 has 'result_class' => ( is => 'ro', isa => Str, default => 'DBIx::Class::ResultClass::HashRefInflator' );
 
-=attribute_public stored_result_source is: ro, isa: L<Catalyst::Controller::DBIC::API::Types/ResultSource>
+=method_public stored_result_source
 
 This is the result source for the controller
 
 =cut
 
-has 'stored_result_source' =>
-(
-    is => 'ro',
-    isa => ResultSource,
-    lazy_build => 1,
-);
+sub stored_result_source
+{
+    return shift->stored_model->result_source;
+}
 
-=attribute_public stored_model is: ro, isa: L<Catalyst::Controller::DBIC::API::Types/Model>
+=method_public stored_model
 
 This is the model for the controller
 
 =cut
 
-has 'stored_model' =>
-(
-    is => 'ro',
-    isa => Model,
-    lazy_build => 1,
-);
-
-sub _build_stored_model
+sub stored_model
 {
     return $_[0]->_application->model($_[0]->class);
-}
-
-sub _build_stored_result_source
-{
-    return shift->stored_model->result_source();
 }
 
 =method_public check_has_column
