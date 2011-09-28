@@ -132,7 +132,7 @@ page_arg controls how to reference 'page' in the the request_data
 
 has 'page_arg' => ( is => 'ro', isa => Str, default => 'list_page' );
 
-=attribute_public offset_arg is: ro, isa: Str, default: 'offset'
+=attribute_public offset_arg is: ro, isa: Str, default: 'list_offset'
 
 offset_arg controls how to reference 'offset' in the the request_data
 
