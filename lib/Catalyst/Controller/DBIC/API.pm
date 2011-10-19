@@ -818,12 +818,18 @@ sub insert_object_from_params
     my ($self, undef, $object, $params) = @_;
 
     my %rels;
-    while (my ($k, $v) = each %{ $params }) {
-        if (ref($v) && !(reftype($v) eq reftype(JSON::true))) {
-            $rels{$k} = $v;
+    while (my ($key, $value) = each %{ $params }) {
+        if (ref($value) && !(reftype($value) eq reftype(JSON::true))) {
+            $rels{$key} = $value;
         }
+        # accessor = colname
+        elsif ($object->can($key)) {
+            $object->$key($value);
+        }
+        # accessor != colname
         else {
-            $object->set_column($k => $v);
+            my $accessor = $object->result_source->column_info($key)->{accessor};
+            $object->$accessor($value);
         }
     }
 
