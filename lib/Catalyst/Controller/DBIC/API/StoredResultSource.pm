@@ -23,7 +23,7 @@ result_class is the name of the resultset class that is the model for this contr
 
 =cut
 
-has 'result_class' => ( is => 'ro', isa => Str, default => 'DBIx::Class::ResultClass::HashRefInflator' );
+has 'result_class' => ( is => 'ro', isa => Maybe[Str], default => 'DBIx::Class::ResultClass::HashRefInflator' );
 
 =method_public stored_result_source
 
