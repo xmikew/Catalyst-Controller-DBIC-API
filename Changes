@@ -2,6 +2,8 @@ Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
 
 {{ $NEXT }}
 
+2.004002  2011-10-24 15:48:55 Europe/Vienna
+
 - Use the column accessor instead of set_column when inserting new objects
 - Allow setting the result_class to undef to prevent the usage of HashRefInflator
 
