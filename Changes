@@ -1,6 +1,8 @@
 Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
 
 {{ $NEXT }}
+
+2.004003  2011-12-19 14:41:59 Europe/Vienna
 - Fixed test failure in generic.t with Moose > 2.02
 
 2.004002  2011-10-24 15:48:55 Europe/Vienna
