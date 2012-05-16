@@ -81,8 +81,7 @@ sub begin :Private
 {
     my ($self, $c) = @_;
 
-    Catalyst::Controller::DBIC::API::Request->meta->apply($c->req)
-        unless Moose::Util::does_role($c->req, 'Catalyst::Controller::DBIC::API::Request');
+    Moose::Util::ensure_all_roles($c->req, 'Catalyst::Controller::DBIC::API::Request');
 }
 
 =method_protected setup
