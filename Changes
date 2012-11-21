@@ -1,6 +1,8 @@
 Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
 
 {{ $NEXT }}
+
+2.004004  2012-11-21 12:20:41 Europe/Vienna
 - Fixed test failures in t/[rest,rpc]/item.t on newer HTTP::Message versions
 - Don't wrap the SQLite test schema DDL queries in a transaction to suppress
   DBIx::Class warnings
