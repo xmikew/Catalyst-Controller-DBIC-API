@@ -202,7 +202,7 @@ sub generate_rs
 {
     my ($self, $c) = @_;
 
-    return $c->model($self->class || $c->stash->{class});
+    return $c->model($c->stash->{class} || $self->class);
 }
 
 =method_protected inflate_request
