@@ -203,7 +203,7 @@ my $track_list_url           = "$base/api/rest/track";
     } $schema->resultset('Track')->search( undef, { page => 1, } )->all;
     is_deeply(
         $response,
-        { list => \@expected_response, success => 'true', totalcount => 15 },
+        { list => \@expected_response, success => JSON::true, totalcount => 15 },
         'correct data returned for static configured paging'
     );
 }

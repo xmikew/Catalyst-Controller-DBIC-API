@@ -29,6 +29,7 @@ my $artist_view_url = "$base/api/rest/artist/";
     my %expected_response =
         $schema->resultset('Artist')->find($id)->get_columns;
     my $response = $json->decode( $mech->content );
+    #artist does not have use_json_boolean => 1, so true values are stringified to 'true'
     is_deeply(
         $response,
         { data => \%expected_response, success => 'true' },
@@ -65,7 +66,7 @@ my $track_view_url = "$base/api/rest/track/";
     my $response = $json->decode( $mech->content );
     is_deeply(
         $response,
-        { data => \%expected_response, success => 'true' },
+        { data => \%expected_response, success => JSON::true },
         'correct data returned for track with datetime'
     );
 }
