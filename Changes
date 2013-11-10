@@ -90,7 +90,7 @@ Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
 - Object inflation during end was broken out into its own method: each_object_inflate
 - Enable offset based paging
 
-2.001001
+2.001001 2010-02-07
 **************************************************************
 ** THIS RELEASE GUARANTEES TO BREAK BACKWARDS COMPATIBILITY **
 **************************************************************
@@ -121,7 +121,7 @@ Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
 - The distribution is now managed by Dist::Zilla
 - And some more likely forgotten.
 
-1.004002
+1.004002 2010-01-14
 - Implement 'as' as a complement to 'select'
 - CGI::Expand'ed search parameters are now also JSON decoded + test
 - Fixed pod for parameters using a json string which shouldn't be surrounded
@@ -132,14 +132,14 @@ Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
   and had relied on the action name 'object'
 - Check for defined objects before returning them for create/update
 
-1.004001
+1.004001 2010-01-04
 - Allow for more complex prefetch_allows (multiple keys in hash)
 - Skip non-existant parameters in deserialization
 - Fixed whitespace to use spaces instead of tabs
 - Fixed pod to not use the config attributes from before 1.004
 - Fixed prefetch_allows check to properly handle nested attrs + test
 
-1.004000
+1.004000 2009-12-22
 - Moosify
 - Move validation for *_exposes/*_allows to Data::DPath::Validator
 - Reorganize internals to use Moose and roles
@@ -147,30 +147,30 @@ Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
 - Properly handle JSON boolean values
 - Earlier and more consistent validation of configuration and request parameters
 
-1.003004
+1.003004 2009-12-09
 - Database errors are also handled for searches + tests
 - Totalcount isn't included in the response if a db error occurs while fetching data
 - Converted no_plan tests to done_testing (required Test::More 0.88)
 
-1.003003
+1.003003 2009-11-16
 - Database errors are properly handled + test
 - Fixed isa redefined warnings
 - Fixed bug preventing compat with future Catalyst::Action::Deserialize versions
 
-1.003002
+1.003002 2009-07-22
 - Added totalcount to paged list responses
 - Fixed some tests weren't run in t/rpc/list.t
 - Fixed wrong setup_dbic_args_method error message
 
-1.003001
+1.003001 2009-07-17
 - Minor fix to prevent failing test
 
-1.003000
+1.003000 2009-05-19
 - Added prefetch support
 - Refactored to ensure all request params accept JSON, CGI::Expand or standard params
 - Doc improvements
 
-1.002000
+1.002000 2009-03-18
 - Better error handing when unable to parse search arg
 - Added setup_dbic_args_method config option
 - Added list_search_exposes config option
@@ -180,18 +180,18 @@ Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
 - Added search by json
 - Added pagination support
 
-1.001000
+1.001000 2008-07-23
 - Added setup_list_method configuration flag (jshirley)
 - Added support for setting config params in stash
 - Added list_grouped_by, list_count and list_ordered_by config attributes
 - Fixed bug with behaviour of list_returns
 
-1.000002
+1.000002 Unknown
 - Fixed lack of deserialization under RPC
 
-1.000001
+1.000001 2008-06-29
 - Improved docs
 
-1.000000
+1.000000 2008-06-28
 - Released
 
