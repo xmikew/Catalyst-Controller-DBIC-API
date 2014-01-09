@@ -2,6 +2,9 @@ Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
 
 {{ $NEXT }}
 - Fixed test failures with JSON 2.90 (thanks Samuel Kaufman!)
+- Use Catalyst's http method matching for REST instead of
+  ActionRole, whose feature went into core in 5.90013, and
+  MatchRequestMethod, whose feature went into 5.90020
 
 2.004004  2012-11-21 12:20:41 Europe/Vienna
 - Fixed test failures in t/[rest,rpc]/item.t on newer HTTP::Message versions
