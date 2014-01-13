@@ -10,17 +10,17 @@ use namespace::autoclean;
 
 requires '_application';
 
-=attribute_public class is: ro, isa: Str
+=attribute_public class
 
-class is the name of the class that is the model for this controller
+The name of the Catalyst model for this controller.
 
 =cut
 
 has 'class' => ( is => 'ro', isa => Str, writer => '_set_class' );
 
-=attribute_public result_class is: ro, isa: Str
+=attribute_public result_class
 
-result_class is the name of the resultset class that is the model for this controller
+Populates the result_class attribute of resultsets.
 
 =cut
 
@@ -32,7 +32,7 @@ has 'result_class' => (
 
 =method_public stored_result_source
 
-This is the result source for the controller
+Returns the result_source of the stored_model.
 
 =cut
 
@@ -42,7 +42,11 @@ sub stored_result_source {
 
 =method_public stored_model
 
-This is the model for the controller
+Returns the model for the configured class.
+
+Be aware that model is called as a class method on the Catalyst application
+and not as an instance method on $c which might lead to unexpected results
+in conjunction with ACCEPT_CONTEXT!
 
 =cut
 

@@ -7,10 +7,7 @@ use MooseX::Types::Structured('Tuple');
 use Catalyst::Controller::DBIC::API::Types(':all');
 use namespace::autoclean;
 
-=attribute_public objects is:
-    ro
-    isa ArrayRef[Tuple[Object,Maybe[HashRef]]]
-    traits: ['Array']
+=attribute_public objects
 
 This attribute stores the objects found/created at the object action.
 It handles the following methods:
@@ -38,9 +35,7 @@ has objects => (
     },
 );
 
-=attribute_public current_result_set is:
-    ro
-    isa: L<Catalyst::Controller::DBIC::API::Types/ResultSet>
+=attribute_public current_result_set
 
 Stores the current ResultSet derived from the initial
 L<Catalyst::Controller::DBIC::API::StoredResultSource/stored_model>.

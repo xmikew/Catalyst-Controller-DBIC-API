@@ -17,7 +17,8 @@ __PACKAGE__->config(
 
 =head1 DESCRIPTION
 
-Provides an RPC API interface to the functionality described in L<Catalyst::Controller::DBIC::API>.
+Provides an RPC API interface to the functionality described in
+L<Catalyst::Controller::DBIC::API>.
 
 By default provides the following endpoints:
 
@@ -35,7 +36,13 @@ Chained: override
 PathPart: override
 CaptureArgs: 0
 
-As described in L<Catalyst::Controller::DBIC::API/setup>, this action is the chain root of the controller but has no pathpart or chain parent defined by default, so these must be defined in order for the controller to function. The neatest way is normally to define these using the controller's config.
+As described in L<Catalyst::Controller::DBIC::API/setup>, this action is the
+chain root of the controller but has no pathpart or chain parent defined by
+default.
+
+These must be defined in order for the controller to function.
+
+The neatest way is normally to define these using the controller's config.
 
   __PACKAGE__->config
     ( action => { setup => { PathPart => 'track', Chained => '/api/rpc/rpc_base' } },
@@ -50,7 +57,8 @@ Chained: L</objects_no_id>
 PathPart: create
 CaptureArgs: 0
 
-Provides an endpoint to the functionality described in L<Catalyst::Controller::DBIC::API/update_or_create>.
+Provides an endpoint to the functionality described in
+L<Catalyst::Controller::DBIC::API/update_or_create>.
 
 =cut
 
@@ -65,7 +73,8 @@ Chained: L</deserialize>
 PathPart: list
 CaptureArgs: 0
 
-Provides an endpoint to the functionality described in L<Catalyst::Controller::DBIC::API/list>.
+Provides an endpoint to the functionality described in
+L<Catalyst::Controller::DBIC::API/list>.
 
 =cut
 
@@ -80,7 +89,8 @@ Chained: L</object_with_id>
 PathPart: ''
 Args: 0
 
-Provides an endpoint to the functionality described in L<Catalyst::Controller::DBIC::API/item>.
+Provides an endpoint to the functionality described in
+L<Catalyst::Controller::DBIC::API/item>.
 
 =cut
 
@@ -95,7 +105,8 @@ Chained: L</object_with_id>
 PathPart: update
 Args: 0
 
-Provides an endpoint to the functionality described in L<Catalyst::Controller::DBIC::API/update_or_create>.
+Provides an endpoint to the functionality described in
+L<Catalyst::Controller::DBIC::API/update_or_create>.
 
 =cut
 
@@ -110,7 +121,8 @@ Chained: L</object_with_id>
 PathPart: delete
 Args: 0
 
-Provides an endpoint to the functionality described in L<Catalyst::Controller::DBIC::API/delete>.
+Provides an endpoint to the functionality described in
+L<Catalyst::Controller::DBIC::API/delete>.
 
 =cut
 
@@ -125,7 +137,8 @@ Chained: L</objects_no_id>
 PathPart: update
 Args: 0
 
-Provides an endpoint to the functionality described in L<Catalyst::Controller::DBIC::API/update_or_create> for multiple objects.
+Provides an endpoint to the functionality described in
+L<Catalyst::Controller::DBIC::API/update_or_create> for multiple objects.
 
 =cut
 
@@ -140,7 +153,8 @@ Chained: L</objects_no_id>
 PathPart: delete
 Args: 0
 
-Provides an endpoint to the functionality described in L<Catalyst::Controller::DBIC::API/delete> for multiple objects.
+Provides an endpoint to the functionality described in
+L<Catalyst::Controller::DBIC::API/delete> for multiple objects.
 
 =cut
 

@@ -7,6 +7,7 @@ Revision history for Catalyst-Controller-DBIC-API: {{ $dist->version }}
  - Use Catalyst's http method matching for REST instead of
    ActionRole, whose feature went into core in 5.90013, and
    MatchRequestMethod, whose feature went into 5.90020
+ - Documentation improvements
 
 2.004004 2012-11-21T12:20:41Z Europe/Vienna
  - Fixed test failures in t/[rest,rpc]/item.t on newer HTTP::Message

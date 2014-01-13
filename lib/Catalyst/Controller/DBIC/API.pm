@@ -79,7 +79,8 @@ __PACKAGE__->config();
 
  :Private
 
-begin is provided in the base class to setup the Catalyst Request object, by applying the DBIC::API::Request role.
+begin is provided in the base class to setup the Catalyst request object by
+applying the DBIC::API::Request role.
 
 =cut
 
@@ -126,7 +127,11 @@ sub setup : Chained('specify.in.subclass.config') : CaptureArgs(0) :
 
  :Chained('setup') :CaptureArgs(0) :PathPart('') :ActionClass('Deserialize')
 
-deserialize absorbs the request data and transforms it into useful bits by using CGI::Expand->expand_hash and a smattering of JSON->decode for a handful of arguments. Current only the following arguments are capable of being expressed as JSON:
+Absorbs the request data and transforms it into useful bits by using
+CGI::Expand->expand_hash and a smattering of JSON->decode for a handful of
+arguments.
+
+Current only the following arguments are capable of being expressed as JSON:
 
     search_arg
     count_arg
@@ -135,7 +140,11 @@ deserialize absorbs the request data and transforms it into useful bits by using
     grouped_by_arg
     prefetch_arg
 
-It should be noted that arguments can used mixed modes in with some caveats. Each top level arg can be expressed as CGI::Expand with their immediate child keys expressed as JSON when sending the data application/x-www-form-urlencoded. Otherwise, you can send content as raw json and it will be deserialized as is with no CGI::Expand expasion.
+It should be noted that arguments can used mixed modes in with some caveats.
+Each top level arg can be expressed as CGI::Expand with their immediate child
+keys expressed as JSON when sending the data application/x-www-form-urlencoded.
+Otherwise, you can send content as raw json and it will be deserialized as is
+with no CGI::Expand expasion.
 
 =cut
 
@@ -217,7 +226,8 @@ sub generate_rs {
 
 =method_protected inflate_request
 
-inflate_request is called at the end of deserialize to populate key portions of the request with the useful bits
+inflate_request is called at the end of deserialize to populate key portions of
+the request with the useful bits.
 
 =cut
 
@@ -246,7 +256,12 @@ sub inflate_request {
 
  :Chained('deserialize') :CaptureArgs(1) :PathPart('')
 
-This action is the chain root for all object level actions (such as delete and update) that operate on a single identifer. The provided identifier will be used to find that particular object and add it to the request's store of objects. Please see L<Catalyst::Controller::DBIC::API::Context> for more details on the stored objects.
+This action is the chain root for all object level actions (such as delete and
+update) that operate on a single identifer. The provided identifier will be used
+to find that particular object and add it to the request's store ofobjects.
+
+Please see L<Catalyst::Controller::DBIC::API::Context> for more details on the
+stored objects.
 
 =cut
 
@@ -275,7 +290,16 @@ sub object_with_id : Chained('deserialize') : CaptureArgs(1) : PathPart('') {
 
  :Chained('deserialize') :CaptureArgs(0) :PathPart('')
 
-This action is the chain root for object level actions (such as create, update, or delete) that can involve more than one object. The data stored at the data_root of the request_data will be interpreted as an array of hashes on which to operate. If the hashes are missing an 'id' key, they will be considered a new object to be created. Otherwise, the values in the hash will be used to perform an update. As a special case, a single hash sent will be coerced into an array. Please see L<Catalyst::Controller::DBIC::API::Context> for more details on the stored objects.
+This action is the chain root for object level actions (such as create, update,
+or delete) that can involve more than one object. The data stored at the
+data_root of the request_data will be interpreted as an array of hashes on which
+to operate. If the hashes are missing an 'id' key, they will be considered a
+new object to be created. Otherwise, the values in the hash will be used to
+perform an update. As a special case, a single hash sent will be coerced into
+an array.
+
+Please see L<Catalyst::Controller::DBIC::API::Context> for more details on the
+stored objects.
 
 =cut
 
@@ -330,7 +354,9 @@ sub objects_no_id : Chained('deserialize') : CaptureArgs(0) : PathPart('') {
 
 =method_protected object_lookup
 
-This method provides the look up functionality for an object based on 'id'. It is passed the current $c and the $id to be used to perform the lookup. Dies if there is no provided $id or if no object was found.
+This method provides the look up functionality for an object based on 'id'.
+It is passed the current $c and the id to be used to perform the lookup.
+Dies if there is no provided id or if no object was found.
 
 =cut
 
@@ -345,13 +371,44 @@ sub object_lookup {
 
 =method_protected list
 
-list's steps are broken up into three distinct methods: L</list_munge_parameters>, L</list_perform_search>, and L</list_format_output>.
+list's steps are broken up into three distinct methods:
 
-The goal of this method is to call ->search() on the current_result_set, change resultset class of the result (if needed), and return it in $c->stash->{$self->stash_key}->{$self->data_root}. Please see the individual methods for more details on what actual processing takes place.
+=over
 
-If the L</select> config param is defined then the hashes will contain only those columns, otherwise all columns in the object will be returned. L</select> of course supports the function/procedure calling semantics that L<DBIx::Class::ResultSet/select>. In order to have proper column names in the result, provide arguments in L</as> (which also follows L<DBIx::Class::ResultSet/as> semantics. Similarly L</count>, L</page>, L</grouped_by> and L</ordered_by> affect the maximum number of rows returned as well as the ordering and grouping. Note that if select, count, ordered_by or grouped_by request parameters are present then these will override the values set on the class with select becoming bound by the select_exposes attribute.
+=item L</list_munge_parameters>
 
-If not all objects in the resultset are required then it's possible to pass conditions to the method as request parameters. You can use a JSON string as the 'search' parameter for maximum flexibility or use L<CGI::Expand> syntax. In the second case the request parameters are expanded into a structure and then used as the search condition.
+=item L</list_perform_search>
+
+=item L</list_format_output>.
+
+=back
+
+The goal of this method is to call ->search() on the current_result_set,
+change the resultset class of the result (if needed), and return it in
+$c->stash->{$self->stash_key}->{$self->data_root}.
+
+Please see the individual methods for more details on what actual processing
+takes place.
+
+If the L</select> config param is defined then the hashes will contain only
+those columns, otherwise all columns in the object will be returned.
+L</select> of course supports the function/procedure calling semantics that
+L<DBIx::Class::ResultSet/select> supports.
+
+In order to have proper column names in the result, provide arguments in L</as>
+(which also follows L<DBIx::Class::ResultSet/as> semantics.
+Similarly L</count>, L</page>, L</grouped_by> and L</ordered_by> affect the
+maximum number of rows returned as well as the ordering and grouping.
+
+Note that if select, count, ordered_by or grouped_by request parameters are
+present, these will override the values set on the class with select becoming
+bound by the select_exposes attribute.
+
+If not all objects in the resultset are required then it's possible to pass
+conditions to the method as request parameters. You can use a JSON string as
+the 'search' parameter for maximum flexibility or use L<CGI::Expand> syntax.
+In the second case the request parameters are expanded into a structure and
+then used as the search condition.
 
 For example, these request parameters:
 
@@ -359,7 +416,8 @@ For example, these request parameters:
  OR
  ?search={"name":"fred","cd": {"artist":"luke"}}
 
-Would result in this search (where 'name' is a column of the schema class, 'cd' is a relation of the schema class and 'artist' is a column of the related class):
+Would result in this search (where 'name' is a column of the result class, 'cd'
+is a relation of the result class and 'artist' is a column of the related class):
 
  $rs->search({ name => 'fred', 'cd.artist' => 'luke' }, { join => ['cd'] })
 
@@ -367,7 +425,8 @@ It is also possible to use a JSON string for expandeded parameters:
 
  ?search.datetime={"-between":["2010-01-06 19:28:00","2010-01-07 19:28:00"]}
 
-Note that if pagination is needed, this can be achieved using a combination of the L</count> and L</page> parameters. For example:
+Note that if pagination is needed, this can be achieved using a combination of
+the L</count> and L</page> parameters. For example:
 
   ?page=2&count=20
 
@@ -390,8 +449,14 @@ sub list {
 
 =method_protected list_munge_parameters
 
-list_munge_parameters is a noop by default. All arguments will be passed through without any manipulation. In order to successfully manipulate the parameters before the search is performed, simply access $c->req->search_parameters|search_attributes (ArrayRef and HashRef respectively), which correspond directly to ->search($parameters, $attributes). Parameter keys will be in already-aliased form.
-To store the munged parameters call $c->req->_set_search_parameters($newparams) and $c->req->_set_search_attributes($newattrs).
+list_munge_parameters is a noop by default. All arguments will be passed through
+without any manipulation. In order to successfully manipulate the parameters
+before the search is performed, simply access
+$c->req->search_parameters|search_attributes (ArrayRef and HashRef respectively),
+which correspond directly to ->search($parameters, $attributes).
+Parameter keys will be in already-aliased form.
+To store the munged parameters call $c->req->_set_search_parameters($newparams)
+and $c->req->_set_search_attributes($newattrs).
 
 =cut
 
@@ -399,7 +464,9 @@ sub list_munge_parameters { }    # noop by default
 
 =method_protected list_perform_search
 
-list_perform_search executes the actual search. current_result_set is updated to contain the result returned from ->search. If paging was requested, search_total_entries will be set as well.
+list_perform_search executes the actual search. current_result_set is updated to
+contain the result returned from ->search. If paging was requested,
+search_total_entries will be set as well.
 
 =cut
 
@@ -432,7 +499,11 @@ sub list_perform_search {
 
 =method_protected list_format_output
 
-list_format_output prepares the response for transmission across the wire. A copy of the current_result_set is taken and its result_class is set to L<DBIx::Class::ResultClass::HashRefInflator>. Each row in the resultset is then iterated and passed to L</row_format_output> with the result of that call added to the output.
+list_format_output prepares the response for transmission across the wire.
+A copy of the current_result_set is taken and its result_class is set to
+L<DBIx::Class::ResultClass::HashRefInflator>. Each row in the resultset is then
+iterated and passed to L</row_format_output> with the result of that call added
+to the output.
 
 =cut
 
@@ -469,7 +540,9 @@ sub list_format_output {
 
 =method_protected row_format_output
 
-row_format_output is called each row of the inflated output generated from the search. It receives two arguments, the catalyst context and the hashref that represents the row. By default, this method is merely a passthrough.
+row_format_output is called each row of the inflated output generated from the
+search. It receives two arguments, the catalyst context and the hashref that
+represents the row. By default, this method is merely a passthrough.
 
 =cut
 
@@ -482,7 +555,8 @@ sub row_format_output {
 
 =method_protected item
 
-item will return a single object called by identifier in the uri. It will be inflated via each_object_inflate.
+item will return a single object called by identifier in the uri. It will be
+inflated via each_object_inflate.
 
 =cut
 
@@ -503,7 +577,12 @@ sub item {
 
 =method_protected update_or_create
 
-update_or_create is responsible for iterating any stored objects and performing updates or creates. Each object is first validated to ensure it meets the criteria specified in the L</create_requires> and L</create_allows> (or L</update_allows>) parameters of the controller config. The objects are then committed within a transaction via L</transact_objects> using a closure around L</save_objects>.
+update_or_create is responsible for iterating any stored objects and performing
+updates or creates. Each object is first validated to ensure it meets the
+criteria specified in the L</create_requires> and L</create_allows> (or
+L</update_allows>) parameters of the controller config. The objects are then
+committed within a transaction via L</transact_objects> using a closure around
+L</save_objects>.
 
 =cut
 
@@ -524,7 +603,10 @@ sub update_or_create {
 
 =method_protected transact_objects
 
-transact_objects performs the actual commit to the database via $schema->txn_do. This method accepts two arguments, the context and a coderef to be used within the transaction. All of the stored objects are passed as an arrayref for the only argument to the coderef.
+transact_objects performs the actual commit to the database via $schema->txn_do.
+This method accepts two arguments, the context and a coderef to be used within
+the transaction. All of the stored objects are passed as an arrayref for the
+only argument to the coderef.
 
 =cut
 
@@ -545,7 +627,9 @@ sub transact_objects {
 
 =method_protected validate_objects
 
-This is a shortcut method for performing validation on all of the stored objects in the request. Each object's provided values (for create or update) are updated to the allowed values permitted by the various config parameters.
+This is a shortcut method for performing validation on all of the stored objects
+in the request. Each object's provided values (for create or update) are updated
+to the allowed values permitted by the various config parameters.
 
 =cut
 
@@ -568,7 +652,11 @@ sub validate_objects {
 
 =method_protected validate_object
 
-validate_object takes the context and the object as an argument. It then filters the passed values in slot two of the tuple through the create|update_allows configured. It then returns those filtered values. Values that are not allowed are silently ignored. If there are no values for a particular key, no valid values at all, or multiple of the same key, this method will die.
+validate_object takes the context and the object as an argument. It then filters
+the passed values in slot two of the tuple through the create|update_allows
+configured. It then returns those filtered values. Values that are not allowed
+are silently ignored. If there are no values for a particular key, no valid
+values at all, or multiple of the same key, this method will die.
 
 =cut
 
@@ -655,7 +743,9 @@ sub validate_object {
 
 =method_protected delete
 
-delete operates on the stored objects in the request. It first transacts the objects, deleting them in the database using L</transact_objects> and a closure around L</delete_objects>, and then clears the request store of objects.
+delete operates on the stored objects in the request. It first transacts the
+objects, deleting them in the database using L</transact_objects> and a closure
+around L</delete_objects>, and then clears the request store of objects.
 
 =cut
 
@@ -677,7 +767,8 @@ sub delete {
 
 =method_protected save_objects
 
-This method is used by update_or_create to perform the actual database manipulations. It iterates each object calling L</save_object>.
+This method is used by update_or_create to perform the actual database
+manipulations. It iterates each object calling L</save_object>.
 
 =cut
 
@@ -691,7 +782,8 @@ sub save_objects {
 
 =method_protected save_object
 
-save_object first checks to see if the object is already in storage. If so, it calls L</update_object_from_params> otherwise it calls L</insert_object_from_params>
+save_object first checks to see if the object is already in storage. If so, it
+calls L</update_object_from_params> otherwise L</insert_object_from_params>.
 
 =cut
 
@@ -711,7 +803,9 @@ sub save_object {
 
 =method_protected update_object_from_params
 
-update_object_from_params iterates through the params to see if any of them are pertinent to relations. If so it calls L</update_object_relation> with the object, and the relation parameters. Then it calls ->update on the object.
+update_object_from_params iterates through the params to see if any of them are
+pertinent to relations. If so it calls L</update_object_relation> with the
+object, and the relation parameters. Then it calls ->update on the object.
 
 =cut
 
@@ -743,7 +837,8 @@ sub update_object_from_params {
 
 =method_protected update_object_relation
 
-update_object_relation finds the relation to the object, then calls ->update with the specified parameters
+update_object_relation finds the relation to the object, then calls ->update
+with the specified parameters.
 
 =cut
 
@@ -781,7 +876,7 @@ sub update_object_relation {
 
 =method_protected insert_object_from_params
 
-insert_object_from_params sets the columns for the object, then calls ->insert
+Sets the columns of the object, then calls ->insert.
 
 =cut
 
@@ -818,7 +913,7 @@ sub insert_object_from_params {
 
 =method_protected delete_objects
 
-delete_objects iterates through each object calling L</delete_object>
+Iterates through each object calling L</delete_object>.
 
 =cut
 
@@ -830,7 +925,7 @@ sub delete_objects {
 
 =method_protected delete_object
 
-Performs the actual ->delete on the object
+Performs the actual ->delete on the object.
 
 =cut
 
@@ -844,7 +939,11 @@ sub delete_object {
 
 =method_protected end
 
-end performs the final manipulation of the response before it is serialized. This includes setting the success of the request both at the HTTP layer and JSON layer. If configured with return_object true, and there are stored objects as the result of create or update, those will be inflated according to the schema and get_inflated_columns
+end performs the final manipulation of the response before it is serialized.
+This includes setting the success of the request both at the HTTP layer and
+JSON layer. If configured with return_object true, and there are stored objects
+as the result of create or update, those will be inflated according to the
+schema and get_inflated_columns
 
 =cut
 
@@ -889,9 +988,12 @@ sub end : Private {
 
 =method_protected each_object_inflate
 
-each_object_inflate executes during L</end> and allows hooking into the process of inflating the objects to return in the response. Receives, the context, and the object as arguments.
+each_object_inflate executes during L</end> and allows hooking into the process
+of inflating the objects to return in the response. Receives, the context, and
+the object as arguments.
 
-This only executes if L</return_object> if set and if there are any objects to actually return.
+This only executes if L</return_object> if set and if there are any objects to
+actually return.
 
 =cut
 
@@ -914,7 +1016,8 @@ sub serialize : ActionClass('Serialize') { }
 
 =method_protected push_error
 
-push_error stores an error message into the stash to be later retrieved by L</end>. Accepts a Dict[message => Str] parameter that defines the error message.
+Stores an error message into the stash to be later retrieved by L</end>.
+Accepts a Dict[message => Str] parameter that defines the error message.
 
 =cut
 
@@ -935,7 +1038,7 @@ sub push_error {
 
 =method_protected get_errors
 
-get_errors returns all of the errors stored in the stash
+Returns all of the errors stored in the stash.
 
 =cut
 
@@ -948,7 +1051,7 @@ sub get_errors {
 
 =method_protected has_errors
 
-returns returns true if errors are stored in the stash
+Returns true if errors are stored in the stash.
 
 =cut
 
@@ -961,21 +1064,38 @@ sub has_errors {
 
 =head1 DESCRIPTION
 
-Easily provide common API endpoints based on your L<DBIx::Class> schema classes. Module provides both RPC and REST interfaces to base functionality. Uses L<Catalyst::Action::Serialize> and L<Catalyst::Action::Deserialize> to serialise response and/or deserialise request.
+Easily provide common API endpoints based on your L<DBIx::Class> schema classes.
+Module provides both RPC and REST interfaces to base functionality.
+Uses L<Catalyst::Action::Serialize> and L<Catalyst::Action::Deserialize> to
+serialize response and/or deserialise request.
 
 =head1 OVERVIEW
 
-This document describes base functionlity such as list, create, delete, update and the setting of config attributes. L<Catalyst::Controller::DBIC::API::RPC> and L<Catalyst::Controller::DBIC::API::REST> describe details of provided endpoints to those base methods.
+This document describes base functionlity such as list, create, delete, update
+and the setting of config attributes. L<Catalyst::Controller::DBIC::API::RPC>
+and L<Catalyst::Controller::DBIC::API::REST> describe details of provided
+endpoints to those base methods.
 
-You will need to create a controller for each schema class you require API endpoints for. For example if your schema has Artist and Track, and you want to provide a RESTful interface to these, you should create MyApp::Controller::API::REST::Artist and MyApp::Controller::API::REST::Track which both subclass L<Catalyst::Controller::DBIC::API::REST>. Similarly if you wanted to provide an RPC style interface then subclass L<Catalyst::Controller::DBIC::API::RPC>. You then configure these individually as specified in L</CONFIGURATION>.
+You will need to create a controller for each schema class you require API
+endpoints for. For example if your schema has Artist and Track, and you want to
+provide a RESTful interface to these, you should create
+MyApp::Controller::API::REST::Artist and MyApp::Controller::API::REST::Track
+which both subclass L<Catalyst::Controller::DBIC::API::REST>.
+Similarly if you wanted to provide an RPC style interface then subclass
+L<Catalyst::Controller::DBIC::API::RPC>. You then configure these individually
+as specified in L</CONFIGURATION>.
 
-Also note that the test suite of this module has an example application used to run tests against. It maybe helpful to look at that until a better tutorial is written.
+Also note that the test suite of this module has an example application used to
+run tests against. It maybe helpful to look at that until a better tutorial is
+written.
 
 =head2 CONFIGURATION
 
-Each of your controller classes needs to be configured to point at the relevant schema class, specify what can be updated and so on, as shown in the L</SYNOPSIS>.
+Each of your controller classes needs to be configured to point at the relevant
+schema class, specify what can be updated and so on, as shown in the L</SYNOPSIS>.
 
-The class, create_requires, create_allows and update_requires parameters can also be set in the stash like so:
+The class, create_requires, create_allows and update_requires parameters can
+also be set in the stash like so:
 
   sub setup :Chained('/api/rpc/rpc_base') :CaptureArgs(1) :PathPart('any') {
     my ($self, $c, $object_type) = @_;
@@ -992,19 +1112,27 @@ The class, create_requires, create_allows and update_requires parameters can als
     $self->next::method($c);
   }
 
-Generally it's better to have one controller for each DBIC source with the config hardcoded, but in some cases this isn't possible.
+Generally it's better to have one controller for each DBIC source with the
+config hardcoded, but in some cases this isn't possible.
 
-Note that the Chained, CaptureArgs and PathPart are just standard Catalyst configuration parameters and that then endpoint specified in Chained - in this case '/api/rpc/rpc_base' - must actually exist elsewhere in your application. See L<Catalyst::DispatchType::Chained> for more details.
+Note that the Chained, CaptureArgs and PathPart are just standard Catalyst
+configuration parameters and that then endpoint specified in Chained - in this
+case '/api/rpc/rpc_base' - must actually exist elsewhere in your application.
+See L<Catalyst::DispatchType::Chained> for more details.
 
-Below are explanations for various configuration parameters. Please see L<Catalyst::Controller::DBIC::API::StaticArguments> for more details.
+Below are explanations for various configuration parameters. Please see
+L<Catalyst::Controller::DBIC::API::StaticArguments> for more details.
 
 =head3 class
 
-Whatever you would pass to $c->model to get a resultset for this class. MyAppDB::Track for example.
+Whatever you would pass to $c->model to get a resultset for this class.
+MyAppDB::Track for example.
 
 =head3 resultset_class
 
-Desired resultset class after accessing your model. MyAppDB::ResultSet::Track for example. By default, it's DBIx::Class::ResultClass::HashRefInflator. Set to empty string to leave resultset class without change.
+Desired resultset class after accessing your model. MyAppDB::ResultSet::Track
+for example. By default, it's DBIx::Class::ResultClass::HashRefInflator.
+Set to empty string to leave resultset class without change.
 
 =head3 stash_key
 
@@ -1012,43 +1140,60 @@ Controls where in stash request_data should be stored, and defaults to 'response
 
 =head3 data_root
 
-By default, the response data is serialized into $c->stash->{$self->stash_key}->{$self->data_root} and data_root defaults to 'list' to preserve backwards compatibility. This is now configuable to meet the needs of the consuming client.
+By default, the response data is serialized into
+$c->stash->{$self->stash_key}->{$self->data_root} and data_root defaults to
+'list' to preserve backwards compatibility. This is now configuable to meet
+the needs of the consuming client.
 
 =head3 use_json_boolean
 
-By default, the response success status is set to a string value of "true" or "false". If this attribute is true, JSON's true() and false() will be used instead. Note, this does not effect other internal processing of boolean values.
+By default, the response success status is set to a string value of "true" or
+"false". If this attribute is true, JSON's true() and false() will be used
+instead. Note, this does not effect other internal processing of boolean values.
 
 =head3 count_arg, page_arg, select_arg, search_arg, grouped_by_arg, ordered_by_arg, prefetch_arg, as_arg, total_entries_arg
 
-These attributes allow customization of the component to understand requests made by clients where these argument names are not flexible and cannot conform to this components defaults.
+These attributes allow customization of the component to understand requests
+made by clients where these argument names are not flexible and cannot conform
+to this components defaults.
 
 =head3 create_requires
 
-Arrayref listing columns required to be passed to create in order for the request to be valid.
+Arrayref listing columns required to be passed to create in order for the
+request to be valid.
 
 =head3 create_allows
 
-Arrayref listing columns additional to those specified in create_requires that are not required to create but which create does allow. Columns passed to create that are not listed in create_allows or create_requires will be ignored.
+Arrayref listing columns additional to those specified in create_requires that
+are not required to create but which create does allow. Columns passed to create
+that are not listed in create_allows or create_requires will be ignored.
 
 =head3 update_allows
 
-Arrayref listing columns that update will allow. Columns passed to update that are not listed here will be ignored.
+Arrayref listing columns that update will allow. Columns passed to update that
+are not listed here will be ignored.
 
 =head3 select
 
-Arguments to pass to L<DBIx::Class::ResultSet/select> when performing search for L</list>.
+Arguments to pass to L<DBIx::Class::ResultSet/select> when performing search for
+L</list>.
 
 =head3 as
 
-Complements arguments passed to L<DBIx::Class::ResultSet/select> when performing a search. This allows you to specify column names in the result for RDBMS functions, etc.
+Complements arguments passed to L<DBIx::Class::ResultSet/select> when performing
+a search. This allows you to specify column names in the result for RDBMS
+functions, etc.
 
 =head3 select_exposes
 
-Columns and related columns that are okay to return in the resultset since clients can request more or less information specified than the above select argument.
+Columns and related columns that are okay to return in the resultset since
+clients can request more or less information specified than the above select
+argument.
 
 =head3 prefetch
 
-Arguments to pass to L<DBIx::Class::ResultSet/prefetch> when performing search for L</list>.
+Arguments to pass to L<DBIx::Class::ResultSet/prefetch> when performing search
+for L</list>.
 
 =head3 prefetch_allows
 
@@ -1059,19 +1204,23 @@ and unwanted disclosure of data.
 
 =head3 grouped_by
 
-Arguments to pass to L<DBIx::Class::ResultSet/group_by> when performing search for L</list>.
+Arguments to pass to L<DBIx::Class::ResultSet/group_by> when performing search
+for L</list>.
 
 =head3 ordered_by
 
-Arguments to pass to L<DBIx::Class::ResultSet/order_by> when performing search for L</list>.
+Arguments to pass to L<DBIx::Class::ResultSet/order_by> when performing search
+for L</list>.
 
 =head3 search_exposes
 
-Columns and related columns that are okay to search on. For example if only the position column and all cd columns were to be allowed
+Columns and related columns that are okay to search on. For example if only the
+position column and all cd columns were to be allowed
 
  search_exposes => [qw/position/, { cd => ['*'] }]
 
-You can also use this to allow custom columns should you wish to allow them through in order to be caught by a custom resultset. For example:
+You can also use this to allow custom columns should you wish to allow them
+through in order to be caught by a custom resultset. For example:
 
   package RestTest::Controller::API::RPC::TrackExposed;
 
@@ -1101,17 +1250,24 @@ and then in your custom resultset:
 
 =head3 count
 
-Arguments to pass to L<DBIx::Class::ResultSet/rows> when performing search for L</list>.
+Arguments to pass to L<DBIx::Class::ResultSet/rows> when performing search for
+L</list>.
 
 =head3 page
 
-Arguments to pass to L<DBIx::Class::ResultSet/page> when performing search for L</list>.
+Arguments to pass to L<DBIx::Class::ResultSet/page> when performing search for
+L</list>.
 
 =head1 EXTENDING
 
-By default the create, delete and update actions will not return anything apart from the success parameter set in L</end>, often this is not ideal but the required behaviour varies from application to application. So normally it's sensible to write an intermediate class which your main controller classes subclass from.
+By default the create, delete and update actions will not return anything apart
+from the success parameter set in L</end>, often this is not ideal but the
+required behaviour varies from application to application. So normally it's
+sensible to write an intermediate class which your main controller classes
+subclass from.
 
-For example if you wanted create to return the JSON for the newly created object you might have something like:
+For example if you wanted create to return the JSON for the newly created
+object you might have something like:
 
   package MyApp::ControllerBase::DBIC::API::RPC;
   ...
@@ -1136,22 +1292,41 @@ For example if you wanted create to return the JSON for the newly created object
   BEGIN { extends 'MyApp::ControllerBase::DBIC::API::RPC' };
   ...
 
-It should be noted that the return_object attribute will produce the above result for you, free of charge.
+It should be noted that the return_object attribute will produce the above
+result for you, free of charge.
 
-Similarly you might want create, update and delete to all forward to the list action once they are done so you can refresh your view. This should also be simple enough.
+Similarly you might want create, update and delete to all forward to the list
+action once they are done so you can refresh your view. This should also be
+simple enough.
 
-If more extensive customization is required, it is recommened to peer into the roles that comprise the system and make use
+If more extensive customization is required, it is recommened to peer into the
+roles that comprise the system and make use
 
 =head1 NOTES
 
-It should be noted that version 1.004 and above makes a rapid depature from the status quo. The internals were revamped to use more modern tools such as Moose and its role system to refactor functionality out into self-contained roles.
+It should be noted that version 1.004 and above makes a rapid depature from the
+status quo. The internals were revamped to use more modern tools such as Moose
+and its role system to refactor functionality out into self-contained roles.
 
-To this end, internally, this module now understands JSON boolean values (as represented by the JSON module) and will Do The Right Thing in handling those values. This means you can have ColumnInflators installed that can covert between JSON booleans and whatever your database wants for boolean values.
+To this end, internally, this module now understands JSON boolean values (as
+represented by the JSON module) and will Do The Right Thing in handling those
+values. This means you can have ColumnInflators installed that can covert
+between JSON booleans and whatever your database wants for boolean values.
 
-Validation for various *_allows or *_exposes is now accomplished via Data::DPath::Validator with a lightly simplified, via subclass, Data::DPath::Validator::Visitor. The rough jist of the process goes as follows: Arguments provided to those attributes are fed into the Validator and Data::DPaths are generated. Then, incoming requests are validated against these paths generated. The validator is set in "loose" mode meaning only one path is required to match. For more information, please see L<Data::DPath::Validator> and more specifically L<Catalyst::Controller::DBIC::API::Validator>.
+Validation for various *_allows or *_exposes is now accomplished via
+Data::DPath::Validator with a lightly simplified, via a subclass of
+Data::DPath::Validator::Visitor.
+
+The rough jist of the process goes as follows: Arguments provided to those
+attributes are fed into the Validator and Data::DPaths are generated.
+Then incoming requests are validated against these paths generated.
+The validator is set in "loose" mode meaning only one path is required to match.
+For more information, please see L<Data::DPath::Validator> and more specifically
+L<Catalyst::Controller::DBIC::API::Validator>.
 
 Since 2.00100:
-Transactions are used. The stash is put aside in favor of roles applied to the request object with additional accessors.
+Transactions are used. The stash is put aside in favor of roles applied to the
+request object with additional accessors.
 Error handling is now much more consistent with most errors immediately detaching.
 The internals are much easier to read and understand with lots more documentation.
 

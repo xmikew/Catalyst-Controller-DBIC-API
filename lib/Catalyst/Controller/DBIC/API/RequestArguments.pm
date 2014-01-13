@@ -13,19 +13,22 @@ use Catalyst::Controller::DBIC::API::JoinBuilder;
 
 =attribute_private search_validator
 
-A Catalyst::Controller::DBIC::API::Validator instance used solely to validate search parameters
+A Catalyst::Controller::DBIC::API::Validator instance used solely to validate
+search parameters.
 
 =cut
 
 =attribute_private select_validator
 
-A Catalyst::Controller::DBIC::API::Validator instance used solely to validate select parameters
+A Catalyst::Controller::DBIC::API::Validator instance used solely to validate
+select parameters.
 
 =cut
 
 =attribute_private prefetch_validator
 
-A Catalyst::Controller::DBIC::API::Validator instance used solely to validate prefetch parameters
+A Catalyst::Controller::DBIC::API::Validator instance used solely to validate
+prefetch parameters.
 
 =cut
 
@@ -53,9 +56,9 @@ role {
         requires qw( _controller check_has_relation check_column_relation );
     }
 
-=attribute_public count is: ro, isa: Int
+=attribute_public count
 
-count is the number of rows to be returned during paging
+The number of rows to be returned during paging.
 
 =cut
 
@@ -66,9 +69,9 @@ count is the number of rows to be returned during paging
         predicate => 'has_count',
     );
 
-=attribute_public page is: ro, isa: Int
+=attribute_public page
 
-page is what page to return while paging
+What page to return while paging.
 
 =cut
 
@@ -79,9 +82,9 @@ page is what page to return while paging
         predicate => 'has_page',
     );
 
-=attribute_public offset is ro, isa: Int
+=attribute_public offset
 
-offset specifies where to start the paged result (think SQL LIMIT)
+Specifies where to start the paged result (think SQL LIMIT).
 
 =cut
 
@@ -92,9 +95,9 @@ offset specifies where to start the paged result (think SQL LIMIT)
         predicate => 'has_offset',
     );
 
-=attribute_public ordered_by is: ro, isa: L<Catalyst::Controller::DBIC::API::Types/OrderedBy>
+=attribute_public ordered_by
 
-ordered_by is passed to ->search to determine sorting
+Is passed to ->search to determine sorting.
 
 =cut
 
@@ -107,9 +110,9 @@ ordered_by is passed to ->search to determine sorting
         default   => sub { $p->static ? [] : undef },
     );
 
-=attribute_public groupd_by is: ro, isa: L<Catalyst::Controller::DBIC::API::Types/GroupedBy>
+=attribute_public groupd_by
 
-grouped_by is passed to ->search to determine aggregate results
+Is passed to ->search to determine aggregate results.
 
 =cut
 
@@ -122,9 +125,9 @@ grouped_by is passed to ->search to determine aggregate results
         default   => sub { $p->static ? [] : undef },
     );
 
-=attribute_public prefetch is: ro, isa: L<Catalyst::Controller::DBIC::API::Types/Prefetch>
+=attribute_public prefetch
 
-prefetch is passed to ->search to optimize the number of database fetches for joins
+Is passed to ->search to optimize the number of database fetches for joins.
 
 =cut
 
@@ -153,11 +156,15 @@ prefetch is passed to ->search to optimize the number of database fetches for jo
         },
     );
 
-=attribute_public search_exposes is: ro, isa: ArrayRef[Str|HashRef]
+=attribute_public search_exposes
 
-search_exposes limits what can actually be searched. If a certain column isn't indexed or perhaps a BLOB, you can explicitly say which columns can be search and exclude that one.
+Limits what can actually be searched. If a certain column isn't indexed or
+perhaps a BLOB, you can explicitly say which columns can be search to exclude
+that one.
 
-Like the synopsis in DBIC::API shows, you can declare a "template" of what is allowed (by using an '*'). Each element passed in, will be converted into a Data::DPath and added to the validator.
+Like the synopsis in DBIC::API shows, you can declare a "template" of what is
+allowed (by using '*'). Each element passed in, will be converted into a
+Data::DPath and added to the validator.
 
 =cut
 
@@ -173,9 +180,10 @@ Like the synopsis in DBIC::API shows, you can declare a "template" of what is al
         },
     );
 
-=attribute_public search is: ro, isa: L<Catalyst::Controller::DBIC::API::Types/SearchParameters>
+=attribute_public search
 
-search contains the raw search parameters. Upon setting, a trigger will fire to format them, set search_parameters, and set search_attributes.
+Contains the raw search parameters. Upon setting, a trigger will fire to format
+them, set search_parameters and search_attributes.
 
 Please see L</generate_parameters_attributes> for details on how the format works.
 
@@ -217,9 +225,9 @@ Please see L</generate_parameters_attributes> for details on how the format work
         },
     );
 
-=attribute_public search_parameters is:ro, isa: L<Catalyst::Controller::DBIC::API::Types/SearchParameters>
+=attribute_public search_parameters
 
-search_parameters stores the formatted search parameters that will be passed to ->search
+Stores the formatted search parameters that will be passed to ->search.
 
 =cut
 
@@ -232,9 +240,9 @@ search_parameters stores the formatted search parameters that will be passed to 
         default   => sub { [ {} ] },
     );
 
-=attribute_public search_attributes is:ro, isa: HashRef
+=attribute_public search_attributes
 
-search_attributes stores the formatted search attributes that will be passed to ->search
+Stores the formatted search attributes that will be passed to ->search.
 
 =cut
 
@@ -246,9 +254,9 @@ search_attributes stores the formatted search attributes that will be passed to 
         lazy_build => 1,
     );
 
-=attribute_public search_total_entries is: ro, isa: Int
+=attribute_public search_total_entries
 
-search_total_entries stores the total number of entries in a paged search result
+Stores the total number of entries in a paged search result.
 
 =cut
 
@@ -259,11 +267,14 @@ search_total_entries stores the total number of entries in a paged search result
         predicate => 'has_search_total_entries',
     );
 
-=attribute_public select_exposes is: ro, isa: ArrayRef[Str|HashRef]
+=attribute_public select_exposes
 
-select_exposes limits what can actually be selected. Use this to whitelist database functions (such as COUNT).
+Limits what can actually be selected. Use this to whitelist database functions
+(such as COUNT).
 
-Like the synopsis in DBIC::API shows, you can declare a "template" of what is allowed (by using an '*'). Each element passed in, will be converted into a Data::DPath and added to the validator.
+Like the synopsis in DBIC::API shows, you can declare a "template" of what is
+allowed (by using '*'). Each element passed in, will be converted into a
+Data::DPath and added to the validator.
 
 =cut
 
@@ -279,9 +290,10 @@ Like the synopsis in DBIC::API shows, you can declare a "template" of what is al
         },
     );
 
-=attribute_public select is: ro, isa: L<Catalyst::Controller::DBIC::API::Types/SelectColumns>
+=attribute_public select
 
-select is the search attribute that allows you to both limit what is returned in the result set, and also make use of database functions like COUNT.
+Is the search attribute that allows you to both limit what is returned in the
+result set and also make use of database functions like COUNT.
 
 Please see L<DBIx::Class::ResultSet/select> for more details.
 
@@ -308,9 +320,11 @@ Please see L<DBIx::Class::ResultSet/select> for more details.
         },
     );
 
-=attribute_public as is: ro, isa: L<Catalyst::Controller::DBIC::API::Types/AsAliases>
+=attribute_public as
 
-as is the search attribute compliment to L</select> that allows you to label columns for object inflaction and actually reference database functions like COUNT.
+Is the search attribute compliment to L</select> that allows you to label
+columns for object inflaction and actually reference database functions like
+COUNT.
 
 Please see L<DBIx::Class::ResultSet/as> for more details.
 
@@ -334,13 +348,13 @@ Please see L<DBIx::Class::ResultSet/as> for more details.
         }
     );
 
-=attribute_public joins is: ro, isa L<Catalyst::Controller::DBIC::API::Types/JoinBuilder>
+=attribute_public joins
 
-joins holds the top level JoinBuilder object used to keep track of joins automagically while formatting complex search parameters.
+Holds the top level JoinBuilder object used to keep track of joins automagically
+while formatting complex search parameters.
 
-Provides a single handle which returns the 'join' attribute for search_attributes:
-
-    build_joins => 'joins'
+Provides the method 'build_joins' which returns the 'join' attribute for
+search_attributes.
 
 =cut
 
@@ -351,9 +365,9 @@ Provides a single handle which returns the 'join' attribute for search_attribute
         handles    => { build_joins => 'joins', }
     );
 
-=attribute_public request_data is: ro, isa: HashRef
+=attribute_public request_data
 
-request_data holds the raw (but deserialized) data for ths request
+Holds the raw (but deserialized) data for this request.
 
 =cut
 
@@ -394,7 +408,8 @@ request_data holds the raw (but deserialized) data for ths request
 
 =method_protected format_search_parameters
 
-format_search_parameters iterates through the provided params ArrayRef, calling generate_column_parameters on each one
+Iterates through the provided arrayref calling generate_column_parameters on
+each one.
 
 =cut
 
@@ -418,7 +433,8 @@ format_search_parameters iterates through the provided params ArrayRef, calling 
 
 =method_protected generate_column_parameters
 
-generate_column_parameters recursively generates properly aliased parameters for search, building a new JoinBuilder each layer of recursion
+Recursively generates properly aliased parameters for search building a new
+JoinBuilder each layer of recursion.
 
 =cut
 
@@ -480,7 +496,12 @@ generate_column_parameters recursively generates properly aliased parameters for
 
 =method_protected generate_parameters_attributes
 
-generate_parameters_attributes takes the raw search arguments and formats the parameters by calling format_search_parameters. Then builds the related attributes, preferring request-provided arguments for things like grouped_by over statically configured options. Finally tacking on the appropriate joins. Returns both formatted search parameters and the search attributes.
+Takes the raw search arguments and formats them by calling
+format_search_parameters. Then builds the related attributes, preferring
+request-provided arguments for things like grouped_by over statically configured
+options. Finally tacking on the appropriate joins.
+
+Returns a list of both formatted search parameters and attributes.
 
 =cut
 
@@ -493,7 +514,7 @@ generate_parameters_attributes takes the raw search arguments and formats the pa
 
 =method_protected _build_search_attributes
 
-This builder method generates the search attributes
+This builder method generates the search attributes.
 
 =cut
 

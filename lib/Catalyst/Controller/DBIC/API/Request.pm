@@ -10,9 +10,11 @@ use namespace::autoclean;
 sub _application { }
 sub _controller  { }
 
-=attribute_private _application is: ro, isa: Object|ClassName, handles: Catalyst::Controller::DBIC::API::StoredResultSource
+=attribute_private _application
 
-This attribute helps bridge between the request guts and the application guts; allows request argument validation against the schema. This is set during L<Catalyst::Controller::DBIC::API/inflate_request>
+This attribute helps bridge between the request guts and the application guts;
+allows request argument validation against the schema. This is set during
+L<Catalyst::Controller::DBIC::API/inflate_request>.
 
 =cut
 
@@ -43,7 +45,9 @@ with 'Catalyst::Controller::DBIC::API::StoredResultSource',
 
 =head1 DESCRIPTION
 
-Please see L<Catalyst::Controller::DBIC::API::RequestArguments> and L<Catalyst::Controller::DBIC::API::Request::Context> for the details of this class, as both of those roles are consumed in this role.
+Please see L<Catalyst::Controller::DBIC::API::RequestArguments> and
+L<Catalyst::Controller::DBIC::API::Request::Context> for the details of this
+class, as both of those roles are consumed in this role.
 
 =cut
 

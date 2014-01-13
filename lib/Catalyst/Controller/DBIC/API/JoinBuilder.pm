@@ -6,9 +6,9 @@ use MooseX::Types::Moose(':all');
 use Catalyst::Controller::DBIC::API::Types(':all');
 use namespace::autoclean;
 
-=attribute_public parent is: ro, isa: 'Catalyst::Controller::DBIC::API::JoinBuilder'
+=attribute_public parent
 
-parent stores the direct ascendant in the datastructure that represents the join
+Stores the direct ascendant in the datastructure that represents the join.
 
 =cut
 
@@ -20,9 +20,9 @@ has parent => (
     trigger   => sub { my ( $self, $new ) = @_; $new->add_child($self); },
 );
 
-=attribute_public children is: ro, isa: ArrayRef['Catalyst::Controller::DBIC::API::JoinBuilder'], traits => ['Array']
+=attribute_public children
 
-children stores the immediate descendants in the datastructure that represents the join.
+Stores the immediate descendants in the datastructure that represents the join.
 
 Handles the following methods:
 
@@ -44,9 +44,9 @@ has children => (
     }
 );
 
-=attribute_public joins is: ro, isa: HashRef, lazy_build: true
+=attribute_public joins
 
-joins holds the cached generated join datastructure.
+Holds the cached, generated join datastructure.
 
 =cut
 
@@ -56,9 +56,9 @@ has joins => (
     lazy_build => 1,
 );
 
-=attribute_public name is: ro, isa: Str, required: 1
+=attribute_public name
 
-Sets the key for this level in the generated hash
+Sets the key for this level in the generated hash.
 
 =cut
 
@@ -70,7 +70,8 @@ has name => (
 
 =method_private _build_joins
 
-_build_joins finds the top parent in the structure and then recursively iterates the children building out the join datastructure
+Finds the top parent in the structure and then recursively iterates the children
+building out the join datastructure.
 
 =cut
 
@@ -99,7 +100,10 @@ sub _build_joins {
 
 =head1 DESCRIPTION
 
-JoinBuilder is used to keep track of joins automgically for complex searches. It accomplishes this by building a simple tree of parents and children and then recursively drilling into the tree to produce a useable join attribute for ->search.
+JoinBuilder is used to keep track of joins automagically for complex searches.
+It accomplishes this by building a simple tree of parents and children and then
+recursively drilling into the tree to produce a useable join attribute for
+search.
 
 =cut
 
