@@ -101,7 +101,7 @@ This action is the chain root of the controller. It must either be overridden or
 
   # or
 
-  sub setup :Chained('/api/rpc_base') :CaptureArgs(0) :PathPart('track') {
+  sub setup :Chained('/api/rpc/rpc_base') :CaptureArgs(0) :PathPart('track') {
     my ($self, $c) = @_;
 
     $self->next::method($c);
