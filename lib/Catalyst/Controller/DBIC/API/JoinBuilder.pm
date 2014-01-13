@@ -12,13 +12,12 @@ parent stores the direct ascendant in the datastructure that represents the join
 
 =cut
 
-has parent =>
-(
-    is => 'ro',
-    isa => JoinBuilder,
+has parent => (
+    is        => 'ro',
+    isa       => JoinBuilder,
     predicate => 'has_parent',
-    weak_ref => 1,
-    trigger => sub { my ($self, $new) = @_; $new->add_child($self); },
+    weak_ref  => 1,
+    trigger   => sub { my ( $self, $new ) = @_; $new->add_child($self); },
 );
 
 =attribute_public children is: ro, isa: ArrayRef['Catalyst::Controller::DBIC::API::JoinBuilder'], traits => ['Array']
@@ -29,21 +28,19 @@ Handles the following methods:
 
     all_children => 'elements'
     has_children => 'count'
-    add_child => 'push'
+    add_child    => 'push'
 
 =cut
 
-has children =>
-(
-    is => 'ro',
-    isa => ArrayRef[JoinBuilder],
-    traits => ['Array'],
+has children => (
+    is      => 'ro',
+    isa     => ArrayRef [JoinBuilder],
+    traits  => ['Array'],
     default => sub { [] },
-    handles =>
-    {
+    handles => {
         all_children => 'elements',
         has_children => 'count',
-        add_child => 'push',
+        add_child    => 'push',
     }
 );
 
@@ -53,10 +50,9 @@ joins holds the cached generated join datastructure.
 
 =cut
 
-has joins =>
-(
-    is => 'ro',
-    isa => HashRef,
+has joins => (
+    is         => 'ro',
+    isa        => HashRef,
     lazy_build => 1,
 );
 
@@ -66,10 +62,9 @@ Sets the key for this level in the generated hash
 
 =cut
 
-has name =>
-(
-    is => 'ro',
-    isa => Str,
+has name => (
+    is       => 'ro',
+    isa      => Str,
     required => 1,
 );
 
@@ -79,15 +74,12 @@ _build_joins finds the top parent in the structure and then recursively iterates
 
 =cut
 
-sub _build_joins
-{
+sub _build_joins {
     my ($self) = @_;
 
     my $parent;
-    while(my $found = $self->parent)
-    {
-        if($found->has_parent)
-        {
+    while ( my $found = $self->parent ) {
+        if ( $found->has_parent ) {
             $self = $found;
             next;
         }
@@ -95,15 +87,14 @@ sub _build_joins
     }
 
     my $builder;
-    $builder = sub
-    {
+    $builder = sub {
         my ($node) = @_;
         my $foo = {};
-        map { $foo->{$_->name} = $builder->($_) } $node->all_children;
+        map { $foo->{ $_->name } = $builder->($_) } $node->all_children;
         return $foo;
     };
 
-    return $builder->($parent || $self);
+    return $builder->( $parent || $self );
 }
 
 =head1 DESCRIPTION

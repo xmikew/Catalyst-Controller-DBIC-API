@@ -1,4 +1,5 @@
 package Catalyst::Controller::DBIC::API::RPC;
+
 #ABSTRACT: Provides an RPC interface to DBIx::Class
 
 use Moose;
@@ -53,9 +54,8 @@ Provides an endpoint to the functionality described in L<Catalyst::Controller::D
 
 =cut
 
-sub create :Chained('objects_no_id') :PathPart('create') :Args(0)
-{
-	my ($self, $c) = @_;
+sub create : Chained('objects_no_id') : PathPart('create') : Args(0) {
+    my ( $self, $c ) = @_;
     $self->update_or_create($c);
 }
 
@@ -69,9 +69,8 @@ Provides an endpoint to the functionality described in L<Catalyst::Controller::D
 
 =cut
 
-sub list :Chained('deserialize') :PathPart('list') :Args(0)
-{
-	my ($self, $c) = @_;
+sub list : Chained('deserialize') : PathPart('list') : Args(0) {
+    my ( $self, $c ) = @_;
     $self->next::method($c);
 }
 
@@ -85,9 +84,8 @@ Provides an endpoint to the functionality described in L<Catalyst::Controller::D
 
 =cut
 
-sub item :Chained('object_with_id') :PathPart('') :Args(0)
-{
-    my ($self, $c) = @_;
+sub item : Chained('object_with_id') : PathPart('') : Args(0) {
+    my ( $self, $c ) = @_;
     $self->next::method($c);
 }
 
@@ -101,9 +99,8 @@ Provides an endpoint to the functionality described in L<Catalyst::Controller::D
 
 =cut
 
-sub update :Chained('object_with_id') :PathPart('update') :Args(0)
-{
-    my ($self, $c) = @_;
+sub update : Chained('object_with_id') : PathPart('update') : Args(0) {
+    my ( $self, $c ) = @_;
     $self->update_or_create($c);
 }
 
@@ -117,9 +114,8 @@ Provides an endpoint to the functionality described in L<Catalyst::Controller::D
 
 =cut
 
-sub delete :Chained('object_with_id') :PathPart('delete') :Args(0)
-{
-    my ($self, $c) = @_;
+sub delete : Chained('object_with_id') : PathPart('delete') : Args(0) {
+    my ( $self, $c ) = @_;
     $self->next::method($c);
 }
 
@@ -133,9 +129,8 @@ Provides an endpoint to the functionality described in L<Catalyst::Controller::D
 
 =cut
 
-sub update_bulk :Chained('objects_no_id') :PathPart('update') :Args(0)
-{
-    my ($self, $c) = @_;
+sub update_bulk : Chained('objects_no_id') : PathPart('update') : Args(0) {
+    my ( $self, $c ) = @_;
     $self->update_or_create($c);
 }
 
@@ -149,9 +144,8 @@ Provides an endpoint to the functionality described in L<Catalyst::Controller::D
 
 =cut
 
-sub delete_bulk :Chained('objects_no_id') :PathPart('delete') :Args(0)
-{
-    my ($self, $c) = @_;
+sub delete_bulk : Chained('objects_no_id') : PathPart('delete') : Args(0) {
+    my ( $self, $c ) = @_;
     $self->delete($c);
 }
 

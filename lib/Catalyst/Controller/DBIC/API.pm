@@ -10,24 +10,25 @@ use JSON ();
 use Test::Deep::NoTest('eq_deeply');
 use MooseX::Types::Moose(':all');
 use Moose::Util;
-use Scalar::Util('blessed', 'reftype');
+use Scalar::Util( 'blessed', 'reftype' );
 use Try::Tiny;
 use Catalyst::Controller::DBIC::API::Request;
 use namespace::autoclean;
 
 has '_json' => (
-    is => 'ro',
-    isa => 'JSON',
+    is         => 'ro',
+    isa        => 'JSON',
     lazy_build => 1,
 );
 
 sub _build__json {
+
     # no ->utf8 here because the request params get decoded by Catalyst
     return JSON->new;
 }
 
 with 'Catalyst::Controller::DBIC::API::StoredResultSource',
-     'Catalyst::Controller::DBIC::API::StaticArguments';
+    'Catalyst::Controller::DBIC::API::StaticArguments';
 
 with 'Catalyst::Controller::DBIC::API::RequestArguments' => { static => 1 };
 
@@ -40,23 +41,28 @@ __PACKAGE__->config();
   BEGIN { extends 'Catalyst::Controller::DBIC::API::RPC' }
 
   __PACKAGE__->config
-    ( action => { setup => { PathPart => 'artist', Chained => '/api/rpc/rpc_base' } }, # define parent chain action and partpath
+    ( # define parent chain action and PathPart
+      action => {
+          setup => {
+              Chained  => '/api/rpc/rpc_base',
+              PathPart => 'artist',
+          }
+      },
       class            => 'MyAppDB::Artist',
       resultset_class  => 'MyAppDB::ResultSet::Artist',
       create_requires  => ['name', 'age'],
       create_allows    => ['nickname'],
       update_allows    => ['name', 'age', 'nickname'],
       update_allows    => ['name', 'age', 'nickname'],
-      select           => [qw/name age/],
+      select           => ['name', 'age'],
       prefetch         => ['cds'],
       prefetch_allows  => [
           'cds',
-          qw/ cds /,
           { cds => 'tracks' },
-          { cds => [qw/ tracks /] },
+          { cds => ['tracks'] },
       ],
-      ordered_by       => [qw/age/],
-      search_exposes   => [qw/age nickname/, { cds => [qw/title year/] }],
+      ordered_by       => ['age'],
+      search_exposes   => ['age', 'nickname', { cds => ['title', 'year'] }],
       data_root        => 'data',
       use_json_boolean => 1,
       return_object    => 1,
@@ -77,18 +83,20 @@ begin is provided in the base class to setup the Catalyst Request object, by app
 
 =cut
 
-sub begin :Private
-{
-    my ($self, $c) = @_;
+sub begin : Private {
+    my ( $self, $c ) = @_;
 
-    Moose::Util::ensure_all_roles($c->req, 'Catalyst::Controller::DBIC::API::Request');
+    Moose::Util::ensure_all_roles( $c->req,
+        'Catalyst::Controller::DBIC::API::Request' );
 }
 
 =method_protected setup
 
  :Chained('specify.in.subclass.config') :CaptureArgs(0) :PathPart('specify.in.subclass.config')
 
-This action is the chain root of the controller. It must either be overridden or configured to provide a base pathpart to the action and also a parent action. For example, for class MyAppDB::Track you might have
+This action is the chain root of the controller. It must either be overridden or
+configured to provide a base PathPart to the action and also a parent action.
+For example, for class MyAppDB::Track you might have
 
   package MyApp::Controller::API::RPC::Track;
   use Moose;
@@ -111,7 +119,8 @@ This action does nothing by default.
 
 =cut
 
-sub setup :Chained('specify.in.subclass.config') :CaptureArgs(0) :PathPart('specify.in.subclass.config') {}
+sub setup : Chained('specify.in.subclass.config') : CaptureArgs(0) :
+    PathPart('specify.in.subclass.config') { }
 
 =method_protected deserialize
 
@@ -130,62 +139,64 @@ It should be noted that arguments can used mixed modes in with some caveats. Eac
 
 =cut
 
-sub deserialize :Chained('setup') :CaptureArgs(0) :PathPart('') :ActionClass('Deserialize')
-{
-    my ($self, $c) = @_;
+sub deserialize : Chained('setup') : CaptureArgs(0) : PathPart('') :
+    ActionClass('Deserialize') {
+    my ( $self, $c ) = @_;
     my $req_params;
 
-    if ($c->req->data && scalar(keys %{$c->req->data}))
-    {
+    if ( $c->req->data && scalar( keys %{ $c->req->data } ) ) {
         $req_params = $c->req->data;
     }
-    else
-    {
-        $req_params = CGI::Expand->expand_hash($c->req->params);
+    else {
+        $req_params = CGI::Expand->expand_hash( $c->req->params );
 
-        foreach my $param (@{[$self->search_arg, $self->count_arg, $self->page_arg, $self->offset_arg, $self->ordered_by_arg, $self->grouped_by_arg, $self->prefetch_arg]})
+        foreach my $param (
+            @{  [   $self->search_arg,     $self->count_arg,
+                    $self->page_arg,       $self->offset_arg,
+                    $self->ordered_by_arg, $self->grouped_by_arg,
+                    $self->prefetch_arg
+                ]
+            }
+            )
         {
             # these params can also be composed of JSON
             # but skip if the parameter is not provided
             next if not exists $req_params->{$param};
+
             # find out if CGI::Expand was involved
-            if (ref $req_params->{$param} eq 'HASH')
-            {
-                for my $key ( keys %{$req_params->{$param}} )
-                {
+            if ( ref $req_params->{$param} eq 'HASH' ) {
+                for my $key ( keys %{ $req_params->{$param} } ) {
+
                     # copy the value because JSON::XS will alter it
                     # even if decoding failed
                     my $value = $req_params->{$param}->{$key};
-                    try
-                    {
+                    try {
                         my $deserialized = $self->_json->decode($value);
                         $req_params->{$param}->{$key} = $deserialized;
                     }
-                    catch
-                    {
-                        $c->log->debug("Param '$param.$key' did not deserialize appropriately: $_")
-                        if $c->debug;
+                    catch {
+                        $c->log->debug(
+                            "Param '$param.$key' did not deserialize appropriately: $_"
+                        ) if $c->debug;
                     }
                 }
             }
-            else
-            {
-                try
-                {
-                    my $value = $req_params->{$param};
+            else {
+                try {
+                    my $value        = $req_params->{$param};
                     my $deserialized = $self->_json->decode($value);
                     $req_params->{$param} = $deserialized;
                 }
-                catch
-                {
-                    $c->log->debug("Param '$param' did not deserialize appropriately: $_")
-                    if $c->debug;
+                catch {
+                    $c->log->debug(
+                        "Param '$param' did not deserialize appropriately: $_"
+                    ) if $c->debug;
                 }
             }
         }
     }
 
-    $self->inflate_request($c, $req_params);
+    $self->inflate_request( $c, $req_params );
 }
 
 =method_protected generate_rs
@@ -198,11 +209,10 @@ getting a resultset.
 
 =cut
 
-sub generate_rs
-{
-    my ($self, $c) = @_;
+sub generate_rs {
+    my ( $self, $c ) = @_;
 
-    return $c->model($c->stash->{class} || $self->class);
+    return $c->model( $c->stash->{class} || $self->class );
 }
 
 =method_protected inflate_request
@@ -211,12 +221,10 @@ inflate_request is called at the end of deserialize to populate key portions of 
 
 =cut
 
-sub inflate_request
-{
-    my ($self, $c, $params) = @_;
+sub inflate_request {
+    my ( $self, $c, $params ) = @_;
 
-    try
-    {
+    try {
         # set static arguments
         $c->req->_set_controller($self);
 
@@ -224,13 +232,12 @@ sub inflate_request
         $c->req->_set_request_data($params);
 
         # set the current resultset
-        $c->req->_set_current_result_set($self->generate_rs($c));
+        $c->req->_set_current_result_set( $self->generate_rs($c) );
 
     }
-    catch
-    {
+    catch {
         $c->log->error($_);
-        $self->push_error($c, { message => $_ });
+        $self->push_error( $c, { message => $_ } );
         $c->detach();
     }
 }
@@ -243,26 +250,23 @@ This action is the chain root for all object level actions (such as delete and u
 
 =cut
 
-sub object_with_id :Chained('deserialize') :CaptureArgs(1) :PathPart('')
-{
-	my ($self, $c, $id) = @_;
+sub object_with_id : Chained('deserialize') : CaptureArgs(1) : PathPart('') {
+    my ( $self, $c, $id ) = @_;
 
-    my $vals = $c->req->request_data->{$self->data_root};
-    unless(defined($vals))
-    {
+    my $vals = $c->req->request_data->{ $self->data_root };
+    unless ( defined($vals) ) {
+
         # no data root, assume the request_data itself is the payload
         $vals = $c->req->request_data;
     }
 
-    try
-    {
+    try {
         # there can be only one set of data
-        $c->req->add_object([$self->object_lookup($c, $id), $vals]);
+        $c->req->add_object( [ $self->object_lookup( $c, $id ), $vals ] );
     }
-    catch
-    {
+    catch {
         $c->log->error($_);
-        $self->push_error($c, { message => $_ });
+        $self->push_error( $c, { message => $_ } );
         $c->detach();
     }
 }
@@ -275,55 +279,49 @@ This action is the chain root for object level actions (such as create, update, 
 
 =cut
 
-sub objects_no_id :Chained('deserialize') :CaptureArgs(0) :PathPart('')
-{
-    my ($self, $c) = @_;
+sub objects_no_id : Chained('deserialize') : CaptureArgs(0) : PathPart('') {
+    my ( $self, $c ) = @_;
 
-    if($c->req->has_request_data)
-    {
+    if ( $c->req->has_request_data ) {
         my $data = $c->req->request_data;
         my $vals;
 
-        if(exists($data->{$self->data_root}) && defined($data->{$self->data_root}))
+        if ( exists( $data->{ $self->data_root } )
+            && defined( $data->{ $self->data_root } ) )
         {
-            my $root = $data->{$self->data_root};
-            if(reftype($root) eq 'ARRAY')
-            {
+            my $root = $data->{ $self->data_root };
+            if ( reftype($root) eq 'ARRAY' ) {
                 $vals = $root;
             }
-            elsif(reftype($root) eq 'HASH')
-            {
+            elsif ( reftype($root) eq 'HASH' ) {
                 $vals = [$root];
             }
-            else
-            {
+            else {
                 $c->log->error('Invalid request data');
-                $self->push_error($c, { message => 'Invalid request data' });
+                $self->push_error( $c,
+                    { message => 'Invalid request data' } );
                 $c->detach();
             }
         }
-        else
-        {
+        else {
             # no data root, assume the request_data itself is the payload
-            $vals = [$c->req->request_data];
+            $vals = [ $c->req->request_data ];
         }
 
-        foreach my $val (@$vals)
-        {
-            unless(exists($val->{id}))
-            {
-                $c->req->add_object([$c->req->current_result_set->new_result({}), $val]);
+        foreach my $val (@$vals) {
+            unless ( exists( $val->{id} ) ) {
+                $c->req->add_object(
+                    [ $c->req->current_result_set->new_result( {} ), $val ] );
                 next;
             }
 
-            try
-            {
-                $c->req->add_object([$self->object_lookup($c, $val->{id}), $val]);
+            try {
+                $c->req->add_object(
+                    [ $self->object_lookup( $c, $val->{id} ), $val ] );
             }
-            catch
-            {
+            catch {
                 $c->log->error($_);
-                $self->push_error($c, { message => $_ });
+                $self->push_error( $c, { message => $_ } );
                 $c->detach();
             }
         }
@@ -336,9 +334,8 @@ This method provides the look up functionality for an object based on 'id'. It i
 
 =cut
 
-sub object_lookup
-{
-    my ($self, $c, $id) = @_;
+sub object_lookup {
+    my ( $self, $c, $id ) = @_;
 
     die 'No valid ID provided for look up' unless defined $id and length $id;
     my $object = $c->req->current_result_set->find($id);
@@ -380,9 +377,8 @@ Would result in this search:
 
 =cut
 
-sub list
-{
-    my ($self, $c) = @_;
+sub list {
+    my ( $self, $c ) = @_;
 
     $self->list_munge_parameters($c);
     $self->list_perform_search($c);
@@ -399,7 +395,7 @@ To store the munged parameters call $c->req->_set_search_parameters($newparams) 
 
 =cut
 
-sub list_munge_parameters { } # noop by default
+sub list_munge_parameters { }    # noop by default
 
 =method_protected list_perform_search
 
@@ -407,29 +403,29 @@ list_perform_search executes the actual search. current_result_set is updated to
 
 =cut
 
-sub list_perform_search
-{
-    my ($self, $c) = @_;
+sub list_perform_search {
+    my ( $self, $c ) = @_;
 
-    try
-    {
+    try {
         my $req = $c->req;
 
-        my $rs = $req->current_result_set->search
-        (
-            $req->search_parameters,
-            $req->search_attributes
-        );
+        my $rs =
+            $req->current_result_set->search( $req->search_parameters,
+            $req->search_attributes );
 
         $req->_set_current_result_set($rs);
 
-        $req->_set_search_total_entries($req->current_result_set->pager->total_entries)
-            if $req->has_search_attributes && (exists($req->search_attributes->{page}) && defined($req->search_attributes->{page}) && length($req->search_attributes->{page}));
+        $req->_set_search_total_entries(
+            $req->current_result_set->pager->total_entries )
+            if $req->has_search_attributes
+            && ( exists( $req->search_attributes->{page} )
+            && defined( $req->search_attributes->{page} )
+            && length( $req->search_attributes->{page} ) );
     }
-    catch
-    {
+    catch {
         $c->log->error($_);
-        $self->push_error($c, { message => 'a database error has occured.' });
+        $self->push_error( $c,
+            { message => 'a database error has occured.' } );
         $c->detach();
     }
 }
@@ -440,36 +436,33 @@ list_format_output prepares the response for transmission across the wire. A cop
 
 =cut
 
-sub list_format_output
-{
-    my ($self, $c) = @_;
+sub list_format_output {
+    my ( $self, $c ) = @_;
 
     my $rs = $c->req->current_result_set->search;
-    $rs->result_class($self->result_class) if $self->result_class;
+    $rs->result_class( $self->result_class ) if $self->result_class;
 
-    try
-    {
-        my $output = {};
+    try {
+        my $output    = {};
         my $formatted = [];
 
-        foreach my $row ($rs->all)
-        {
-            push(@$formatted, $self->row_format_output($c, $row));
+        foreach my $row ( $rs->all ) {
+            push( @$formatted, $self->row_format_output( $c, $row ) );
         }
 
-        $output->{$self->data_root} = $formatted;
+        $output->{ $self->data_root } = $formatted;
 
-        if ($c->req->has_search_total_entries)
-        {
-            $output->{$self->total_entries_arg} = $c->req->search_total_entries + 0;
+        if ( $c->req->has_search_total_entries ) {
+            $output->{ $self->total_entries_arg } =
+                $c->req->search_total_entries + 0;
         }
 
-        $c->stash->{$self->stash_key} = $output;
+        $c->stash->{ $self->stash_key } = $output;
     }
-    catch
-    {
+    catch {
         $c->log->error($_);
-        $self->push_error($c, { message => 'a database error has occured.' });
+        $self->push_error( $c,
+            { message => 'a database error has occured.' } );
         $c->detach();
     }
 }
@@ -480,11 +473,11 @@ row_format_output is called each row of the inflated output generated from the s
 
 =cut
 
-sub row_format_output
-{
+sub row_format_output {
+
     #my ($self, $c, $row) = @_;
-    my ($self, undef, $row) = @_;
-    return $row; # passthrough by default
+    my ( $self, undef, $row ) = @_;
+    return $row;    # passthrough by default
 }
 
 =method_protected item
@@ -493,19 +486,18 @@ item will return a single object called by identifier in the uri. It will be inf
 
 =cut
 
-sub item
-{
-    my ($self, $c) = @_;
+sub item {
+    my ( $self, $c ) = @_;
 
-    if($c->req->count_objects != 1)
-    {
+    if ( $c->req->count_objects != 1 ) {
         $c->log->error($_);
-        $self->push_error($c, { message => 'No objects on which to operate' });
+        $self->push_error( $c,
+            { message => 'No objects on which to operate' } );
         $c->detach();
     }
-    else
-    {
-        $c->stash->{$self->stash_key}->{$self->item_root} = $self->each_object_inflate($c, $c->req->get_object(0)->[0]);
+    else {
+        $c->stash->{ $self->stash_key }->{ $self->item_root } =
+            $self->each_object_inflate( $c, $c->req->get_object(0)->[0] );
     }
 }
 
@@ -515,19 +507,17 @@ update_or_create is responsible for iterating any stored objects and performing 
 
 =cut
 
-sub update_or_create
-{
-    my ($self, $c) = @_;
+sub update_or_create {
+    my ( $self, $c ) = @_;
 
-    if($c->req->has_objects)
-    {
+    if ( $c->req->has_objects ) {
         $self->validate_objects($c);
-        $self->transact_objects($c, sub { $self->save_objects($c, @_) } );
+        $self->transact_objects( $c, sub { $self->save_objects( $c, @_ ) } );
     }
-    else
-    {
+    else {
         $c->log->error($_);
-        $self->push_error($c, { message => 'No objects on which to operate' });
+        $self->push_error( $c,
+            { message => 'No objects on which to operate' } );
         $c->detach();
     }
 }
@@ -538,22 +528,17 @@ transact_objects performs the actual commit to the database via $schema->txn_do.
 
 =cut
 
-sub transact_objects
-{
-    my ($self, $c, $coderef) = @_;
+sub transact_objects {
+    my ( $self, $c, $coderef ) = @_;
 
-    try
-    {
-        $self->stored_result_source->schema->txn_do
-        (
-            $coderef,
-            $c->req->objects
-        );
+    try {
+        $self->stored_result_source->schema->txn_do( $coderef,
+            $c->req->objects );
     }
-    catch
-    {
+    catch {
         $c->log->error($_);
-        $self->push_error($c, { message => 'a database error has occured.' });
+        $self->push_error( $c,
+            { message => 'a database error has occured.' } );
         $c->detach();
     }
 }
@@ -564,23 +549,19 @@ This is a shortcut method for performing validation on all of the stored objects
 
 =cut
 
-sub validate_objects
-{
-    my ($self, $c) = @_;
+sub validate_objects {
+    my ( $self, $c ) = @_;
 
-    try
-    {
-        foreach my $obj ($c->req->all_objects)
-        {
-            $obj->[1] = $self->validate_object($c, $obj);
+    try {
+        foreach my $obj ( $c->req->all_objects ) {
+            $obj->[1] = $self->validate_object( $c, $obj );
         }
     }
-    catch
-    {
+    catch {
         my $err = $_;
         $c->log->error($err);
         $err =~ s/\s+at\s+.+\n$//g;
-        $self->push_error($c, { message => $err });
+        $self->push_error( $c, { message => $err } );
         $c->detach();
     }
 }
@@ -591,86 +572,81 @@ validate_object takes the context and the object as an argument. It then filters
 
 =cut
 
-sub validate_object
-{
-    my ($self, $c, $obj) = @_;
-    my ($object, $params) = @$obj;
+sub validate_object {
+    my ( $self, $c, $obj ) = @_;
+    my ( $object, $params ) = @$obj;
 
     my %values;
-    my %requires_map = map
-    {
-        $_ => 1
-    }
-    @{
-        ($object->in_storage)
+    my %requires_map = map { $_ => 1 } @{
+          ( $object->in_storage )
         ? []
         : $c->stash->{create_requires} || $self->create_requires
     };
 
-    my %allows_map = map
-    {
-        (ref $_) ? %{$_} : ($_ => 1)
-    }
-    (
+    my %allows_map = map { ( ref $_ ) ? %{$_} : ( $_ => 1 ) } (
         keys %requires_map,
-        @{
-            ($object->in_storage)
-            ? ($c->stash->{update_allows} || $self->update_allows)
-            : ($c->stash->{create_allows} || $self->create_allows)
+        @{    ( $object->in_storage )
+            ? ( $c->stash->{update_allows} || $self->update_allows )
+            : ( $c->stash->{create_allows} || $self->create_allows )
         }
     );
 
-    foreach my $key (keys %allows_map)
-    {
+    foreach my $key ( keys %allows_map ) {
+
         # check value defined if key required
         my $allowed_fields = $allows_map{$key};
 
-        if (ref $allowed_fields)
-        {
+        if ( ref $allowed_fields ) {
             my $related_source = $object->result_source->related_source($key);
             my $related_params = $params->{$key};
             my %allowed_related_map = map { $_ => 1 } @$allowed_fields;
-            my $allowed_related_cols = ($allowed_related_map{'*'}) ? [$related_source->columns] : $allowed_fields;
+            my $allowed_related_cols =
+                  ( $allowed_related_map{'*'} )
+                ? [ $related_source->columns ]
+                : $allowed_fields;
 
-            foreach my $related_col (@{$allowed_related_cols})
-            {
-                if (defined(my $related_col_value = $related_params->{$related_col})) {
+            foreach my $related_col ( @{$allowed_related_cols} ) {
+                if (defined(
+                        my $related_col_value =
+                            $related_params->{$related_col}
+                    )
+                    )
+                {
                     $values{$key}{$related_col} = $related_col_value;
                 }
             }
         }
-        else
-        {
+        else {
             my $value = $params->{$key};
 
-            if ($requires_map{$key})
-            {
-                unless (defined($value))
-                {
+            if ( $requires_map{$key} ) {
+                unless ( defined($value) ) {
+
                     # if not defined look for default
-                    $value = $object->result_source->column_info($key)->{default_value};
-                    unless (defined $value)
-                    {
+                    $value = $object->result_source->column_info($key)
+                        ->{default_value};
+                    unless ( defined $value ) {
                         die "No value supplied for ${key} and no default";
                     }
                 }
             }
 
             # check for multiple values
-            if (ref($value) && !(reftype($value) eq reftype(JSON::true)))
+            if ( ref($value) && !( reftype($value) eq reftype(JSON::true) ) )
             {
                 require Data::Dumper;
-                die "Multiple values for '${key}': ${\Data::Dumper::Dumper($value)}";
+                die
+                    "Multiple values for '${key}': ${\Data::Dumper::Dumper($value)}";
             }
 
             # check exists so we don't just end up with hash of undefs
             # check defined to account for default values being used
-            $values{$key} = $value if exists $params->{$key} || defined $value;
+            $values{$key} = $value
+                if exists $params->{$key} || defined $value;
         }
     }
 
-    unless (keys %values || !$object->in_storage)
-    {
+    unless ( keys %values || !$object->in_storage ) {
         die 'No valid keys passed';
     }
 
@@ -683,19 +659,18 @@ delete operates on the stored objects in the request. It first transacts the obj
 
 =cut
 
-sub delete
-{
-    my ($self, $c) = @_;
+sub delete {
+    my ( $self, $c ) = @_;
 
-    if($c->req->has_objects)
-    {
-        $self->transact_objects($c, sub { $self->delete_objects($c, @_) });
+    if ( $c->req->has_objects ) {
+        $self->transact_objects( $c,
+            sub { $self->delete_objects( $c, @_ ) } );
         $c->req->clear_objects;
     }
-    else
-    {
+    else {
         $c->log->error($_);
-        $self->push_error($c, { message => 'No objects on which to operate' });
+        $self->push_error( $c,
+            { message => 'No objects on which to operate' } );
         $c->detach();
     }
 }
@@ -706,13 +681,11 @@ This method is used by update_or_create to perform the actual database manipulat
 
 =cut
 
-sub save_objects
-{
-    my ($self, $c, $objects) = @_;
+sub save_objects {
+    my ( $self, $c, $objects ) = @_;
 
-    foreach my $obj (@$objects)
-    {
-        $self->save_object($c, $obj);
+    foreach my $obj (@$objects) {
+        $self->save_object( $c, $obj );
     }
 }
 
@@ -722,19 +695,16 @@ save_object first checks to see if the object is already in storage. If so, it c
 
 =cut
 
-sub save_object
-{
-    my ($self, $c, $obj) = @_;
+sub save_object {
+    my ( $self, $c, $obj ) = @_;
 
-    my ($object, $params) = @$obj;
+    my ( $object, $params ) = @$obj;
 
-    if ($object->in_storage)
-    {
-        $self->update_object_from_params($c, $object, $params);
+    if ( $object->in_storage ) {
+        $self->update_object_from_params( $c, $object, $params );
     }
-    else
-    {
-        $self->insert_object_from_params($c, $object, $params);
+    else {
+        $self->insert_object_from_params( $c, $object, $params );
     }
 
 }
@@ -745,24 +715,25 @@ update_object_from_params iterates through the params to see if any of them are 
 
 =cut
 
-sub update_object_from_params
-{
-    my ($self, $c, $object, $params) = @_;
+sub update_object_from_params {
+    my ( $self, $c, $object, $params ) = @_;
 
-    foreach my $key (keys %$params)
-    {
+    foreach my $key ( keys %$params ) {
         my $value = $params->{$key};
-        if (ref($value) && !(reftype($value) eq reftype(JSON::true)))
-        {
-            $self->update_object_relation($c, $object, delete $params->{$key}, $key);
+        if ( ref($value) && !( reftype($value) eq reftype(JSON::true) ) ) {
+            $self->update_object_relation( $c, $object,
+                delete $params->{$key}, $key );
         }
+
         # accessor = colname
-        elsif ($object->can($key)) {
+        elsif ( $object->can($key) ) {
             $object->$key($value);
         }
+
         # accessor != colname
         else {
-            my $accessor = $object->result_source->column_info($key)->{accessor};
+            my $accessor =
+                $object->result_source->column_info($key)->{accessor};
             $object->$accessor($value);
         }
     }
@@ -776,32 +747,35 @@ update_object_relation finds the relation to the object, then calls ->update wit
 
 =cut
 
-sub update_object_relation
-{
-    my ($self, $c, $object, $related_params, $relation) = @_;
-    my $row = $object->find_related($relation, {} , {});
+sub update_object_relation {
+    my ( $self, $c, $object, $related_params, $relation ) = @_;
+    my $row = $object->find_related( $relation, {}, {} );
 
     if ($row) {
-        foreach my $key (keys %$related_params) {
+        foreach my $key ( keys %$related_params ) {
             my $value = $related_params->{$key};
-            if (ref($value) && !(reftype($value) eq reftype(JSON::true)))
+            if ( ref($value) && !( reftype($value) eq reftype(JSON::true) ) )
             {
-                $self->update_object_relation($c, $row, delete $related_params->{$key}, $key);
+                $self->update_object_relation( $c, $row,
+                    delete $related_params->{$key}, $key );
             }
+
             # accessor = colname
-            elsif ($row->can($key)) {
+            elsif ( $row->can($key) ) {
                 $row->$key($value);
             }
+
             # accessor != colname
             else {
-                my $accessor = $row->result_source->column_info($key)->{accessor};
+                my $accessor =
+                    $row->result_source->column_info($key)->{accessor};
                 $row->$accessor($value);
             }
         }
         $row->update();
     }
     else {
-        $object->create_related($relation, $related_params);
+        $object->create_related( $relation, $related_params );
     }
 }
 
@@ -811,31 +785,34 @@ insert_object_from_params sets the columns for the object, then calls ->insert
 
 =cut
 
-sub insert_object_from_params
-{
+sub insert_object_from_params {
+
     #my ($self, $c, $object, $params) = @_;
-    my ($self, undef, $object, $params) = @_;
+    my ( $self, undef, $object, $params ) = @_;
 
     my %rels;
-    while (my ($key, $value) = each %{ $params }) {
-        if (ref($value) && !(reftype($value) eq reftype(JSON::true))) {
+    while ( my ( $key, $value ) = each %{$params} ) {
+        if ( ref($value) && !( reftype($value) eq reftype(JSON::true) ) ) {
             $rels{$key} = $value;
         }
+
         # accessor = colname
-        elsif ($object->can($key)) {
+        elsif ( $object->can($key) ) {
             $object->$key($value);
         }
+
         # accessor != colname
         else {
-            my $accessor = $object->result_source->column_info($key)->{accessor};
+            my $accessor =
+                $object->result_source->column_info($key)->{accessor};
             $object->$accessor($value);
         }
     }
 
     $object->insert;
 
-    while (my ($k, $v) = each %rels) {
-        $object->create_related($k, $v);
+    while ( my ( $k, $v ) = each %rels ) {
+        $object->create_related( $k, $v );
     }
 }
 
@@ -845,11 +822,10 @@ delete_objects iterates through each object calling L</delete_object>
 
 =cut
 
-sub delete_objects
-{
-    my ($self, $c, $objects) = @_;
+sub delete_objects {
+    my ( $self, $c, $objects ) = @_;
 
-    map { $self->delete_object($c, $_->[0]) } @$objects;
+    map { $self->delete_object( $c, $_->[0] ) } @$objects;
 }
 
 =method_protected delete_object
@@ -858,10 +834,10 @@ Performs the actual ->delete on the object
 
 =cut
 
-sub delete_object
-{
+sub delete_object {
+
     #my ($self, $c, $object) = @_;
-    my ($self, undef, $object) = @_;
+    my ( $self, undef, $object ) = @_;
 
     $object->delete;
 }
@@ -872,13 +848,12 @@ end performs the final manipulation of the response before it is serialized. Thi
 
 =cut
 
-sub end :Private
-{
-    my ($self, $c) = @_;
+sub end : Private {
+    my ( $self, $c ) = @_;
 
     # don't change the http status code if already set elsewhere
-    unless ($c->res->status && $c->res->status != 200) {
-        if ($self->has_errors($c)) {
+    unless ( $c->res->status && $c->res->status != 200 ) {
+        if ( $self->has_errors($c) ) {
             $c->res->status(400);
         }
         else {
@@ -886,20 +861,27 @@ sub end :Private
         }
     }
 
-    if ($c->res->status == 200) {
-        $c->stash->{$self->stash_key}->{success} = $self->use_json_boolean ? JSON::true : 'true';
-        if($self->return_object && $c->req->has_objects) {
+    if ( $c->res->status == 200 ) {
+        $c->stash->{ $self->stash_key }->{success} =
+            $self->use_json_boolean ? JSON::true : 'true';
+        if ( $self->return_object && $c->req->has_objects ) {
             my $returned_objects = [];
-            push(@$returned_objects, $self->each_object_inflate($c, $_)) for map { $_->[0] } $c->req->all_objects;
-            $c->stash->{$self->stash_key}->{$self->data_root} = scalar(@$returned_objects) > 1 ? $returned_objects : $returned_objects->[0];
+            push( @$returned_objects, $self->each_object_inflate( $c, $_ ) )
+                for map { $_->[0] } $c->req->all_objects;
+            $c->stash->{ $self->stash_key }->{ $self->data_root } =
+                scalar(@$returned_objects) > 1
+                ? $returned_objects
+                : $returned_objects->[0];
         }
     }
     else {
-        $c->stash->{$self->stash_key}->{success} = $self->use_json_boolean ? JSON::false : 'false';
-        $c->stash->{$self->stash_key}->{messages} = $self->get_errors($c)
+        $c->stash->{ $self->stash_key }->{success} =
+            $self->use_json_boolean ? JSON::false : 'false';
+        $c->stash->{ $self->stash_key }->{messages} = $self->get_errors($c)
             if $self->has_errors($c);
+
         # don't return data for error responses
-        delete $c->stash->{$self->stash_key}->{$self->data_root};
+        delete $c->stash->{ $self->stash_key }->{ $self->data_root };
     }
 
     $c->forward('serialize');
@@ -913,10 +895,10 @@ This only executes if L</return_object> if set and if there are any objects to a
 
 =cut
 
-sub each_object_inflate
-{
+sub each_object_inflate {
+
     #my ($self, $c, $object) = @_;
-    my ($self, undef, $object) = @_;
+    my ( $self, undef, $object ) = @_;
 
     return { $object->get_columns };
 }
@@ -928,7 +910,7 @@ multiple actions forward to serialize which uses Catalyst::Action::Serialize.
 =cut
 
 # from Catalyst::Action::Serialize
-sub serialize :ActionClass('Serialize') { }
+sub serialize : ActionClass('Serialize') { }
 
 =method_protected push_error
 
@@ -936,19 +918,19 @@ push_error stores an error message into the stash to be later retrieved by L</en
 
 =cut
 
-sub push_error
-{
+sub push_error {
     my ( $self, $c, $params ) = @_;
     die 'Catalyst app object missing'
         unless defined $c;
     my $error = 'unknown error';
-    if (exists $params->{message}) {
+    if ( exists $params->{message} ) {
         $error = $params->{message};
+
         # remove newline from die "error message\n" which is required to not
         # have the filename and line number in the error text
         $error =~ s/\n$//;
     }
-    push( @{$c->stash->{_dbic_crud_errors}}, $error);
+    push( @{ $c->stash->{_dbic_crud_errors} }, $error );
 }
 
 =method_protected get_errors
@@ -957,8 +939,7 @@ get_errors returns all of the errors stored in the stash
 
 =cut
 
-sub get_errors
-{
+sub get_errors {
     my ( $self, $c ) = @_;
     die 'Catalyst app object missing'
         unless defined $c;

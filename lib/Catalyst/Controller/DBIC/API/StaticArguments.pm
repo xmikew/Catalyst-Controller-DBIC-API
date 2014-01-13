@@ -22,32 +22,32 @@ Each provides a number of handles:
 
 =cut
 
-foreach my $var (qw/create_requires create_allows update_requires update_allows/)
+foreach my $var (
+    qw( create_requires create_allows update_requires update_allows ))
 {
-    has $var =>
-    (
-        is => 'ro',
-        isa => ArrayRef[Str|HashRef],
-        traits => ['Array'],
+    has $var => (
+        is      => 'ro',
+        isa     => ArrayRef [ Str | HashRef ],
+        traits  => ['Array'],
         default => sub { [] },
-        trigger => sub
-        {
-            my ($self, $new) = @_;
-            $self->check_column_relation($_, 1) for @$new;
+        trigger => sub {
+            my ( $self, $new ) = @_;
+            $self->check_column_relation( $_, 1 ) for @$new;
         },
-        handles =>
-        {
-            "get_${var}_column" => 'get',
-            "set_${var}_column" => 'set',
+        handles => {
+            "get_${var}_column"    => 'get',
+            "set_${var}_column"    => 'set',
             "delete_${var}_column" => 'delete',
             "insert_${var}_column" => 'insert',
-            "count_${var}_column" => 'count',
-            "all_${var}_columns" => 'elements',
+            "count_${var}_column"  => 'count',
+            "all_${var}_columns"   => 'elements',
         }
     );
 
-    before "set_${var}_column" => sub { $_[0]->check_column_relation($_[2], 1) };
-    before "insert_${var}_column" => sub { $_[0]->check_column_relation($_[2], 1) };
+    before "set_${var}_column" =>
+        sub { $_[0]->check_column_relation( $_[2], 1 ) };
+    before "insert_${var}_column" =>
+        sub { $_[0]->check_column_relation( $_[2], 1 ) };
 }
 
 =attribute_public prefetch_allows is: ro, isa: ArrayRef[ArrayRef|Str|HashRef]
@@ -62,21 +62,18 @@ Like the synopsis in DBIC::API shows, you can declare a "template" of what is al
 =cut
 
 has 'prefetch_allows' => (
-    is => 'ro',
-    writer => '_set_prefetch_allows',
-    isa => ArrayRef[ArrayRef|Str|HashRef],
-    default => sub { [ ] },
+    is        => 'ro',
+    writer    => '_set_prefetch_allows',
+    isa       => ArrayRef [ ArrayRef | Str | HashRef ],
+    default   => sub { [] },
     predicate => 'has_prefetch_allows',
-    traits => ['Array'],
-    handles =>
-    {
-        all_prefetch_allows => 'elements',
-    },
+    traits    => ['Array'],
+    handles   => { all_prefetch_allows => 'elements', },
 );
 
 has 'prefetch_validator' => (
-    is => 'ro',
-    isa => 'Catalyst::Controller::DBIC::API::Validator',
+    is         => 'ro',
+    isa        => 'Catalyst::Controller::DBIC::API::Validator',
     lazy_build => 1,
 );
 
@@ -84,33 +81,28 @@ sub _build_prefetch_validator {
     my $self = shift;
 
     sub _check_rel {
-        my ($self, $rel, $static, $validator) = @_;
-        if(ArrayRef->check($rel))
-        {
-            foreach my $rel_sub (@$rel)
-            {
-                _check_rel($self, $rel_sub, $static, $validator);
+        my ( $self, $rel, $static, $validator ) = @_;
+        if ( ArrayRef->check($rel) ) {
+            foreach my $rel_sub (@$rel) {
+                _check_rel( $self, $rel_sub, $static, $validator );
             }
         }
-        elsif(HashRef->check($rel))
-        {
-            while(my($k,$v) = each %$rel)
-            {
-                $self->check_has_relation($k, $v, undef, $static);
+        elsif ( HashRef->check($rel) ) {
+            while ( my ( $k, $v ) = each %$rel ) {
+                $self->check_has_relation( $k, $v, undef, $static );
             }
             $validator->load($rel);
         }
-        else
-        {
-            $self->check_has_relation($rel, undef, undef, $static);
+        else {
+            $self->check_has_relation( $rel, undef, undef, $static );
             $validator->load($rel);
         }
     }
 
     my $validator = Catalyst::Controller::DBIC::API::Validator->new;
 
-    foreach my $rel ($self->all_prefetch_allows) {
-        _check_rel($self, $rel, 1, $validator);
+    foreach my $rel ( $self->all_prefetch_allows ) {
+        _check_rel( $self, $rel, 1, $validator );
     }
 
     return $validator;
@@ -170,7 +162,8 @@ grouped_by_arg controls how to reference 'grouped_by' in the the request_data
 
 =cut
 
-has 'grouped_by_arg' => ( is => 'ro', isa => Str, default => 'list_grouped_by' );
+has 'grouped_by_arg' =>
+    ( is => 'ro', isa => Str, default => 'list_grouped_by' );
 
 =attribute_public ordered_by_arg is: ro, isa: Str, default: 'list_ordered_by'
 
@@ -178,7 +171,8 @@ ordered_by_arg controls how to reference 'ordered_by' in the the request_data
 
 =cut
 
-has 'ordered_by_arg' => ( is => 'ro', isa => Str, default => 'list_ordered_by' );
+has 'ordered_by_arg' =>
+    ( is => 'ro', isa => Str, default => 'list_ordered_by' );
 
 =attribute_public prefetch_arg is: ro, isa: Str, default: 'list_prefetch'
 
@@ -194,7 +188,7 @@ stash_key controls where in stash request_data should be stored
 
 =cut
 
-has 'stash_key' => ( is => 'ro', isa => Str, default => 'response');
+has 'stash_key' => ( is => 'ro', isa => Str, default => 'response' );
 
 =attribute_public data_root is: ro, isa: Str, default: 'list'
 
@@ -202,7 +196,7 @@ data_root controls how to reference where the data is in the the request_data
 
 =cut
 
-has 'data_root' => ( is => 'ro', isa => Str, default => 'list');
+has 'data_root' => ( is => 'ro', isa => Str, default => 'list' );
 
 =attribute_public item_root is: ro, isa: Str, default: 'data'
 
@@ -211,7 +205,7 @@ requests is in the the request_data
 
 =cut
 
-has 'item_root' => ( is => 'ro', isa => Str, default => 'data');
+has 'item_root' => ( is => 'ro', isa => Str, default => 'data' );
 
 =attribute_public total_entries_arg is: ro, isa: Str, default: 'totalcount'
 
@@ -219,7 +213,8 @@ total_entries_arg controls how to reference 'total_entries' in the the request_d
 
 =cut
 
-has 'total_entries_arg' => ( is => 'ro', isa => Str, default => 'totalcount' );
+has 'total_entries_arg' =>
+    ( is => 'ro', isa => Str, default => 'totalcount' );
 
 =attribute_public use_json_boolean is: ro, isa: Bool, default: 0
 

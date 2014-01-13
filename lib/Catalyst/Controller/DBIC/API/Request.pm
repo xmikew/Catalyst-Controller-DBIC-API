@@ -6,9 +6,9 @@ use MooseX::Types::Moose(':all');
 use namespace::autoclean;
 
 #XXX HACK to satisfy the used roles requirements
-# see Moose test 600_todo_tests/006_required_role_accessors.t
-sub _application {}
-sub _controller {}
+# see Moose test todo_tests/required_role_accessors.t
+sub _application { }
+sub _controller  { }
 
 =attribute_private _application is: ro, isa: Object|ClassName, handles: Catalyst::Controller::DBIC::API::StoredResultSource
 
@@ -16,34 +16,30 @@ This attribute helps bridge between the request guts and the application guts; a
 
 =cut
 
-has '_application' =>
-(
-    is => 'ro',
+has '_application' => (
+    is     => 'ro',
     writer => '_set_application',
-    isa => Object|ClassName,
+    isa    => Object | ClassName,
 );
 
-has '_controller' =>
-(
-    is => 'ro',
-    writer => '_set_controller',
-    isa => Object,
-    trigger => sub
-    {
-        my ($self, $new) = @_;
+has '_controller' => (
+    is      => 'ro',
+    writer  => '_set_controller',
+    isa     => Object,
+    trigger => sub {
+        my ( $self, $new ) = @_;
 
-        $self->_set_class($new->class) if defined($new->class);
-        $self->_set_application($new->_application);
-        $self->_set_search_exposes($new->search_exposes);
-        $self->_set_select_exposes($new->select_exposes);
+        $self->_set_class( $new->class ) if defined( $new->class );
+        $self->_set_application( $new->_application );
+        $self->_set_search_exposes( $new->search_exposes );
+        $self->_set_select_exposes( $new->select_exposes );
     },
     handles => ['prefetch_validator'],
 );
 
-
 with 'Catalyst::Controller::DBIC::API::StoredResultSource',
-     'Catalyst::Controller::DBIC::API::RequestArguments',
-     'Catalyst::Controller::DBIC::API::Request::Context';
+    'Catalyst::Controller::DBIC::API::RequestArguments',
+    'Catalyst::Controller::DBIC::API::Request::Context';
 
 =head1 DESCRIPTION
 

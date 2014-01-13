@@ -7,45 +7,49 @@ use MooseX::Types::Structured('Tuple');
 use Catalyst::Controller::DBIC::API::Types(':all');
 use namespace::autoclean;
 
-=attribute_public objects is: ro, isa ArrayRef[Tuple[Object,Maybe[HashRef]]], traits: ['Array']
+=attribute_public objects is:
+    ro
+    isa ArrayRef[Tuple[Object,Maybe[HashRef]]]
+    traits: ['Array']
 
-This attribute stores the objects found/created at the object action. It handles the following methods:
+This attribute stores the objects found/created at the object action.
+It handles the following methods:
 
-    all_objects => 'elements'
-    add_object => 'push'
+    all_objects   => 'elements'
+    add_object    => 'push'
     count_objects => 'count'
-    has_objects => 'count'
+    has_objects   => 'count'
     clear_objects => 'clear'
 
 =cut
 
-has objects =>
-(
-    is => 'ro',
-    isa => ArrayRef[ Tuple[ Object, Maybe[HashRef] ] ],
-    traits => [ 'Array' ],
+has objects => (
+    is     => 'ro',
+    isa    => ArrayRef[Tuple[Object,Maybe[HashRef]]],
+    traits => ['Array'],
     default => sub { [] },
-    handles =>
-    {
-        all_objects => 'elements',
-        add_object => 'push',
+    handles => {
+        all_objects   => 'elements',
+        add_object    => 'push',
         count_objects => 'count',
-        has_objects => 'count',
+        has_objects   => 'count',
         clear_objects => 'clear',
-        get_object => 'get',
+        get_object    => 'get',
     },
 );
 
-=attribute_public current_result_set is: ro, isa: L<Catalyst::Controller::DBIC::API::Types/ResultSet>
+=attribute_public current_result_set is:
+    ro
+    isa: L<Catalyst::Controller::DBIC::API::Types/ResultSet>
 
-Stores the current ResultSet derived from the initial L<Catalyst::Controller::DBIC::API::StoredResultSource/stored_model>.
+Stores the current ResultSet derived from the initial
+L<Catalyst::Controller::DBIC::API::StoredResultSource/stored_model>.
 
 =cut
 
-has current_result_set =>
-(
-    is => 'ro',
-    isa =>  ResultSet,
+has current_result_set => (
+    is     => 'ro',
+    isa    => ResultSet,
     writer => '_set_current_result_set',
 );
 

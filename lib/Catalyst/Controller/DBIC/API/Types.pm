@@ -4,7 +4,10 @@ package Catalyst::Controller::DBIC::API::Types;
 use warnings;
 use strict;
 
-use MooseX::Types -declare => [qw/OrderedBy GroupedBy Prefetch SelectColumns AsAliases ResultSource ResultSet Model SearchParameters JoinBuilder/];
+use MooseX::Types -declare => [
+    qw( OrderedBy GroupedBy Prefetch SelectColumns AsAliases ResultSource
+        ResultSet Model SearchParameters JoinBuilder )
+];
 use MooseX::Types::Moose(':all');
 
 =type Prefetch as Maybe[ArrayRef[Str|HashRef]]
@@ -92,7 +95,8 @@ Shortcut for Catalyst::Controller::DBIC::API::JoinBuilder
 
 =cut
 
-subtype JoinBuilder, as class_type('Catalyst::Controller::DBIC::API::JoinBuilder');
+subtype JoinBuilder,
+    as class_type('Catalyst::Controller::DBIC::API::JoinBuilder');
 
 =type Model as class_type('DBIx::Class')
 
