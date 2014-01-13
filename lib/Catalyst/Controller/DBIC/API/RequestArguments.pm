@@ -512,12 +512,6 @@ Returns a list of both formatted search parameters and attributes.
             $self->search_attributes );
     };
 
-=method_protected _build_search_attributes
-
-This builder method generates the search attributes.
-
-=cut
-
     method _build_search_attributes => sub {
         my ( $self, $args ) = @_;
         my $static            = $self->_controller;
