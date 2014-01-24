@@ -105,4 +105,57 @@ my $producer_create_url = "$base/api/rest/producer";
         'json for bulk create returned' );
 }
 
+# test create of single related row
+{
+    my $test_data = $json->encode(
+        { name => 'Futuristic Artist', cds => { 'title' => 'snarky cd name', year => '3030' } }
+    );
+    my $req = PUT($artist_create_url);
+    $req->content_type('text/x-json');
+    $req->content_length(
+        do { use bytes; length($test_data) }
+    );
+    $req->content($test_data);
+    $mech->request($req);
+    cmp_ok( $mech->status, '==', 200, 'request with single related row okay' );
+    my $count = $schema->resultset('Artist')
+        ->search({ name => 'Futuristic Artist' })
+        ->count;
+    ok( $count, 'record with related object created' );
+    $count = $schema->resultset('Artist')
+        ->search_related('cds', { title => 'snarky cd name' })
+        ->count;
+    ok( $count, "record's related object created" );
+}
+
+# test create of multiple related rows
+{
+    my $test_data = $json->encode(
+        { name => 'Futuristic Artist 2',
+          cds => [
+            { 'title' => 'snarky cd name 2', year => '3030' },
+            { 'title' => 'snarky cd name 3', year => '3030' },
+          ]
+        }
+    );
+
+    my $req = PUT($artist_create_url);
+    $req->content_type('text/x-json');
+    $req->content_length(
+        do { use bytes; length($test_data) }
+    );
+    $req->content($test_data);
+    $mech->request($req);
+    cmp_ok( $mech->status, '==', 200, 'request with multiple related rows okay' );
+    my $count = $schema->resultset('Artist')
+        ->search({ name => 'Futuristic Artist 2' })
+        ->count;
+    ok( $count, 'record with related object created' );
+    $count = $schema->resultset('Artist')
+        ->search_related('cds', { title => ['snarky cd name 2','snarky cd name 3'] })
+        ->count;
+    ok( $count == 2, "record's related objects created" ) or explain diag $count;
+
+}
+
 done_testing();

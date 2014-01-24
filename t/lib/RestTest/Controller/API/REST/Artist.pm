@@ -7,8 +7,8 @@ __PACKAGE__->config
     ( action => { setup => { PathPart => 'artist', Chained => '/api/rest/rest_base' } },
       class => 'RestTestDB::Artist',
       create_requires => ['name'],
-      create_allows => ['name'],
-      update_allows => ['name'],
+      create_allows => ['name', { cds => ['*'] }],
+      update_allows => ['name', { cds => ['*'] }],
       prefetch_allows => [[qw/ cds /],{ 'cds' => 'tracks'}],
       );
 

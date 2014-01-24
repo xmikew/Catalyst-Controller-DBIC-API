@@ -686,22 +686,28 @@ sub validate_object {
 
         if ( ref $allowed_fields ) {
             my $related_source = $object->result_source->related_source($key);
-            my $related_params = $params->{$key};
+
+            # Could be an arrayref of hashrefs, or just a hashref.
+            my $related_rows = ref($params->{$key}) eq "ARRAY" ? $params->{$key} : [ $params->{$key} ];
             my %allowed_related_map = map { $_ => 1 } @$allowed_fields;
             my $allowed_related_cols =
                   ( $allowed_related_map{'*'} )
                 ? [ $related_source->columns ]
                 : $allowed_fields;
 
-            foreach my $related_col ( @{$allowed_related_cols} ) {
-                if (defined(
-                        my $related_col_value =
-                            $related_params->{$related_col}
-                    )
-                    )
-                {
-                    $values{$key}{$related_col} = $related_col_value;
+            foreach my $related_row ( @$related_rows ) {
+                my %valid_row;
+                foreach my $related_col ( @{$allowed_related_cols} ) {
+                    if (defined(
+                            my $related_col_value =
+                                $related_row->{$related_col}
+                        )
+                       )
+                    {
+                        $valid_row{$related_col} = $related_col_value;
+                    }
                 }
+                push(@{$values{$key}}, \%valid_row) if (keys %valid_row);
             }
         }
         else {
@@ -843,34 +849,43 @@ with the specified parameters.
 =cut
 
 sub update_object_relation {
-    my ( $self, $c, $object, $related_params, $relation ) = @_;
-    my $row = $object->find_related( $relation, {}, {} );
+    my ( $self, $c, $object, $related_records, $relation ) = @_;
+    my $row_count = scalar(@$related_records);
 
-    if ($row) {
-        foreach my $key ( keys %$related_params ) {
-            my $value = $related_params->{$key};
-            if ( ref($value) && !( reftype($value) eq reftype(JSON::true) ) )
-            {
-                $self->update_object_relation( $c, $row,
-                    delete $related_params->{$key}, $key );
-            }
+    # validate_object should always wrap single related records in [ ]
+    while (my $related_params = pop @$related_records) {
 
-            # accessor = colname
-            elsif ( $row->can($key) ) {
-                $row->$key($value);
-            }
+        # if we only have one row, don't need to worry about introspecting
+        my $row = $row_count > 1
+            ? $self->find_related_row( $object, $relation, $related_params )
+            : $object->find_related($relation, {}, {} );
 
-            # accessor != colname
-            else {
-                my $accessor =
-                    $row->result_source->column_info($key)->{accessor};
-                $row->$accessor($value);
+        if ($row) {
+            foreach my $key ( keys %$related_params ) {
+                my $value = $related_params->{$key};
+                if ( ref($value) && !( reftype($value) eq reftype(JSON::true) ) )
+                {
+                    $self->update_object_relation( $c, $row,
+                        delete $related_params->{$key}, $key );
+                }
+
+                # accessor = colname
+                elsif ( $row->can($key) ) {
+                    $row->$key($value);
+                }
+
+                # accessor != colname
+                else {
+                    my $accessor =
+                        $row->result_source->column_info($key)->{accessor};
+                    $row->$accessor($value);
+                }
             }
+            $row->update();
         }
-        $row->update();
-    }
-    else {
-        $object->create_related( $relation, $related_params );
+        else {
+            $object->create_related( $relation, $related_params );
+        }
     }
 }
 
@@ -907,8 +922,43 @@ sub insert_object_from_params {
     $object->insert;
 
     while ( my ( $k, $v ) = each %rels ) {
-        $object->create_related( $k, $v );
+        foreach my $row (@$v) {
+            $object->create_related( $k, $row );
+        }
     }
+}
+
+=method_protected find_related_row
+
+Attempts to find the related row by introspecting the result source and determining
+if we have enough data to properly update.
+
+=cut
+
+sub find_related_row {
+    my ($self, $object, $relation, $related_params) = @_;
+
+    # make a shallow copy, grep + hash slicing and autovivication creates undef
+    # values in the hash we operate on.
+    my $search_params = { %$related_params };
+
+    my @pri = $object->result_source->related_source($relation)->primary_columns;
+    my @have = grep { defined($_) } @{$search_params}{ @pri };
+    if (@have && @pri == @have) {
+        return $object->find_related($relation, @have, { key => 'primary' })
+    }
+
+    # if we were not passed a pri key, see if we meet any unique_constaints
+    my %constraints = $object->result_source->related_source($relation)->unique_constraints;
+    while ( my ($constraint_name,$constraints) = each %constraints ) {
+        my @needed = @$constraints;
+        my @have = grep { defined($_) } @{$search_params}{ @needed };
+        return $object->find_related($relation, @have, { key => $constraint_name })
+            if (@have && @have == @needed);
+    }
+
+    # didn't find anything
+    return undef;
 }
 
 =method_protected delete_objects

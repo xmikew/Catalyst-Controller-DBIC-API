@@ -25,6 +25,9 @@ my $track_url         = "$base/api/rest/track/";
 my $track_update_url  = $track_url . $track->id;
 my $tracks_update_url = $track_url;
 
+my $artist_url        = "$base/api/rest/artist/";
+my $artist_update_url = $artist_url . "1";
+
 # test invalid track id caught
 {
     diag 'DBIx::Class warns about a non-numeric id which is ok because we test for that too';
@@ -99,6 +102,79 @@ my $tracks_update_url = $track_url;
     $track->discard_changes;
     is( $track->title, 'monkey monkey', 'Title changed to "monkey monkey"' );
     is( $track->cd->year, 2009, 'related row updated' );
+}
+
+{
+    my $test_data = $json->encode(
+        { name => 'Caterwauler B. McCrae',
+          cds => [
+            {
+                cdid => 1,
+                title => 'All the bees are gone',
+                year => 3030,
+            },
+            {
+                cdid => 2,
+                title => 'All the crops are gone',
+                year => 3031
+            }
+          ]
+        }
+    );
+
+    my $req = POST( $artist_update_url, Content => $test_data );
+    $req->content_type('text/x-json');
+    $mech->request($req);
+
+    cmp_ok( $mech->status, '==', 200, 'Multi-row update returned 200 OK' );
+
+    my $artist = $schema->resultset('Artist')->search({ artistid => 1 });
+    ok ($artist->next->name eq "Caterwauler B. McCrae", "mutliple related row parent record update");
+
+    # make sure the old cds don't exist, it's possible we just inserted the new rows instead of updating them
+    my $old_cds = $artist->search_related('cds', { title => ['Spoonful of bees', 'Forkful of bees'] } )->count;
+    ok ($old_cds == 0, 'update performed update and not create on related rows');
+
+    my @cds = $artist->search_related('cds', { year => ['3030', '3031'] }, { order_by => 'year' })->all;
+    ok (@cds == 2, 'update modified proper number of related rows');
+    ok ($cds[0]->title eq 'All the bees are gone', 'update modified column on related row');
+    ok ($cds[1]->title eq 'All the crops are gone', 'update modified column on second related row');
+}
+
+# update related rows using only unique_constraint on CD vs. primary key
+# update the year on constraint match
+{
+    my $test_data = $json->encode(
+        { name => 'Caterwauler McCrae',
+          cds => [
+            {
+                artist => 1,
+                title => 'All the bees are gone',
+                year => 3032,
+            },
+            {
+                artist => 1,
+                title => 'All the crops are gone',
+                year => 3032
+            }
+          ]
+        }
+    );
+
+    my $req = POST( $artist_update_url, Content => $test_data );
+    $req->content_type('text/x-json');
+    $mech->request($req);
+
+    cmp_ok( $mech->status, '==', 200, 'Multi-row unique constraint update returned 200 OK' );
+
+    my $artist = $schema->resultset('Artist')->search({ artistid => 1 });
+    ok ($artist->next->name eq "Caterwauler McCrae", "multi-row unique constraint related row parent record updated");
+
+    my $old_cds = $artist->search_related('cds', { year => ['3030', '3031'] }, { order_by => 'year' })->count;
+    ok ( $old_cds == 0, 'multi-row update with unique constraint updated year' );
+
+    my $cds = $artist->search_related('cds', { 'year' => 3032 } )->count;
+    ok ( $cds == 2, 'multi-row update with unique constraint okay' );
 }
 
 # bulk_update existing objects
