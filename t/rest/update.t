@@ -24,6 +24,21 @@ my %original_cols = $track->get_columns;
 my $track_url         = "$base/api/rest/track/";
 my $track_update_url  = $track_url . $track->id;
 my $tracks_update_url = $track_url;
+my $artist_update_url        = "$base/api/rest/artist/1";
+
+# cause warning with ->find in update_object_relation API.pm L847 in version 2.005001
+{
+    my $test_data = $json->encode( { name => 'new name', cds => { title => 'new', artist => 1, year => 1111 } } );
+    diag explain $test_data;
+    my $req = PUT( $artist_update_url, Content => $test_data );
+    $req->content_type('text/x-json');
+    my $res = $mech->request($req);
+    diag explain $res if ( $mech->status != 200 );
+    cmp_ok( $mech->status, '==', 200, 'Attempt to update artist with multiple cds' );
+
+    my $cd = $schema->resultset('CD')->search({ title => 'new', year => 1111 })->next;
+    ok ($cd->title eq 'new', 'new related cd was created');
+}
 
 # test invalid track id caught
 {
