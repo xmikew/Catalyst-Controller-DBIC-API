@@ -850,15 +850,11 @@ with the specified parameters.
 
 sub update_object_relation {
     my ( $self, $c, $object, $related_records, $relation ) = @_;
-    my $row_count = scalar(@$related_records);
 
     # validate_object should always wrap single related records in [ ]
     while (my $related_params = pop @$related_records) {
 
-        # if we only have one row, don't need to worry about introspecting
-        my $row = $row_count > 1
-            ? $self->find_related_row( $object, $relation, $related_params )
-            : $object->find_related($relation, {}, {} );
+        my $row = $self->find_related_row( $object, $relation, $related_params );
 
         if ($row) {
             foreach my $key ( keys %$related_params ) {
@@ -931,7 +927,9 @@ sub insert_object_from_params {
 =method_protected find_related_row
 
 Attempts to find the related row by introspecting the result source and determining
-if we have enough data to properly update.
+if we have enough pri keys or unique constraints to identify the related record we
+need to update. Returns undef if the row doesn't exist or if we didn't have enough
+data to uniquely identify a record based on the schema
 
 =cut
 
